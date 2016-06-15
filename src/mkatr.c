@@ -83,7 +83,8 @@ int main(int argc, char **argv)
                     boot_file = 1;
                 }
                 else
-                    show_error("invalid option '%c'\n", op);
+                    show_error("invalid command line option '-%c'. Try '%s -h' for help.\n",
+                               op, prog_name);
             }
         }
         else if( !out && boot_file != 1 )
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
         }
     }
     if( !out )
-        show_error("missing output file name\n");
+        show_error("missing output file name. Try '%s -h' for help.\n", prog_name);
 
     for(i=0; sectors[i].size; i++)
     {

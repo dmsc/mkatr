@@ -11,14 +11,32 @@ Program Usage
 
 Options:
 
-- `-h`  Shows a brief help
-
 - `-b`  Selects the next file in the command line as the _boot_ file,
         the file will be loaded when the computer boots, and must be
         in the standard Atari binary file format.
 
+- `-h`  Shows a brief help.
+
+- `-v`  Shows version information.
+
 To place files inside a sub-directory, simply add the directory *before*
 all the files inside that directory.
+
+The resulting image will be the smaller size that fits all the given files,
+from the following list:
+
+| Sector Count | Sector Size | Total Size | Name                     |
+|         ---: |        ---: |       ---: | :---                     |
+|       720    |       128   |      90k   | SD                       |
+|      1040    |       128   |     130k   | ED                       |
+|       720    |       256   |     180k   | DD                       |
+|      1440    |       256   |     360k   | DSDD                     |
+|      2048    |       256   |     512k   | hard disk                |
+|      4096    |       256   |       1M   | hard disk                |
+|      8192    |       256   |       2M   | hard disk                |
+|     16384    |       256   |       4M   | hard disk                |
+|     32768    |       256   |       8M   | hard disk                |
+|     65536    |       256   |      16M   | biggest possible image   |
 
 Usage Examples
 --------------

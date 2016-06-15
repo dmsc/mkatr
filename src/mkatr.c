@@ -82,6 +82,8 @@ int main(int argc, char **argv)
                         show_error("can specify only one boot file\n");
                     boot_file = 1;
                 }
+                else if( op == 'v' )
+                    show_version();
                 else
                     show_error("invalid command line option '-%c'. Try '%s -h' for help.\n",
                                op, prog_name);

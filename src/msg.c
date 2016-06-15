@@ -18,6 +18,7 @@
  * Shows error messages.
  */
 #include "msg.h"
+#include "version.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -48,8 +49,18 @@ void show_usage(void)
     printf("Usage: %s [options] <output_atr> <file_1> [... <file_n>]\n"
            "Options:\n"
            "\t-b\tNext file added will be loaded at boot.\n"
-           "\t-h\tShow this help.\n",
+           "\t-h\tShow this help.\n"
+           "\t-v\tShow version information.\n",
            prog_name);
     exit(EXIT_SUCCESS);
 }
 
+void show_version(void)
+{
+    printf("mkatr version %s, Copyright (C) 2016 Daniel Serpell\n\n"
+           "This is free software under the GNU GENERAL PUBLIC LICENSE.\n"
+           "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
+           "FOR A PARTICULAR PURPOSE.\n",
+           prog_version);
+    exit(EXIT_SUCCESS);
+}

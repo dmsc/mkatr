@@ -41,45 +41,57 @@ static char *read_file(const char *fname, size_t size)
     return data;
 }
 
+// Checks if given character is a PATH separator
+static int is_separator(char c)
+{
+#ifdef _WIN32
+    return c == '/' || c == '\\' || c == ':';
+#else
+    return c == '/';
+#endif
+}
+
 static char *atari_name(const char *fname)
 {
-    int pos = 0;
-
     // Convert to 8+3 filename
     char *out = strdup("           ");
 
-    // Search last "/"
-    const char *in = strrchr(fname, '/');
-    if( in && !in[1] )
+    // Search last part of filename (similar to "basename")
+    const char *in, *p;
+    in = p = fname;
+    while( p[0] && p[1] )
     {
-        // Remove all '/'s at the end of filename
-        while( in != fname && *in == '/' )
-            in--;
-        // And search the next '/' again
-        while( in != fname && *in != '/' )
-            in--;
-        if( *in == '/' )
-            in++;
+        while( is_separator(p[0]) && p[1] )
+            p++;
+        if( p[0] && !is_separator(p[0]) )
+            in = p;
+        while( p[0] && !is_separator(p[0]) )
+            p++;
     }
-    else if( in )
-        in++;
-    else
-        in = fname;
 
     // Copy up to 8 characters
-    while( pos < 11 )
+    int pos = 0, dot = 0;
+    while( *in )
     {
         char c = *in++;
         if( !c )
             break;
-        else if( c == '.' && pos < 8 )
-            pos = 7;
+        else if( c == '.' && !dot )
+        {
+            pos = 8;
+            dot = 1;
+            continue;
+        }
+        else if( pos > 7 && !dot )
+            continue;
+        else if( pos > 10 )
+            break;
+        else if( is_separator(c) )
+            break;
         else if( c >= 'a' && c <= 'z' )
             out[pos] = c - 'a' + 'A';
         else if( (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
             out[pos] = c;
-        else if( c == '/' )
-            break;
         else
             out[pos] = '_';
         pos++;

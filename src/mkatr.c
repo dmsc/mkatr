@@ -104,32 +104,22 @@ int main(int argc, char **argv)
     if( !out )
         show_error("missing output file name. Try '%s -h' for help.\n", prog_name);
 
-    char *data = 0;
-    int nsec = 0;
-    int ssec = 0;
+    struct sfs *sfs = 0;
     if( exact_size )
     {
         // Brute force - try all sizes!
-        ssec = 128;
-        for(nsec=6; !data && nsec<65536; nsec++)
-            data = build_spartafs(ssec, nsec, boot_addr, &flist);
-        if( !data )
-        {
-            ssec = 256;
-            for(nsec=32490; !data && nsec<65536; i++)
-                data = build_spartafs(ssec, nsec, boot_addr, &flist);
-        }
+        for(i=6; !sfs && i<65536; i++)
+            sfs = build_spartafs(128, i, boot_addr, &flist);
+        if( !sfs )
+            for(i=32490; !sfs && i<65536; i++)
+                sfs = build_spartafs(256, i, boot_addr, &flist);
     }
     else
     {
-        for(i=0; !data && sectors[i].size; i++)
-        {
-            nsec = sectors[i].num;
-            ssec = sectors[i].size;
-            data = build_spartafs(ssec, nsec, boot_addr, &flist);
-        }
+        for(i=0; !sfs && sectors[i].size; i++)
+            sfs = build_spartafs(sectors[i].size, sectors[i].num, boot_addr, &flist);
     }
-    if( data )
-        write_atr(out, data, ssec, nsec);
+    if( sfs )
+        write_atr(out, sfs_get_data(sfs), sfs_get_sector_size(sfs), sfs_get_num_sectors(sfs));
     return 0;
 }

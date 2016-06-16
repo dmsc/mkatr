@@ -189,22 +189,22 @@ static int compare_level(const void *a, const void *b)
     return strncmp(fa->aname, fb->aname, 11);
 }
 
-char * build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file_list *flist)
+struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file_list *flist)
 {
-    struct sfs sfs;
+    struct sfs *sfs = malloc(sizeof(struct sfs));
 
-    sfs.data = calloc(sector_size, num_sectors);
-    sfs.nsec = num_sectors;
-    sfs.bmap = 4;
-    sfs.nbmp = ((num_sectors + 8)/8 + sector_size - 1) / sector_size;
-    sfs.csec = 4 + sfs.nbmp;
-    sfs.sec_size = sector_size;
+    sfs->data = calloc(sector_size, num_sectors);
+    sfs->nsec = num_sectors;
+    sfs->bmap = 4;
+    sfs->nbmp = ((num_sectors + 8)/8 + sector_size - 1) / sector_size;
+    sfs->csec = 4 + sfs->nbmp;
+    sfs->sec_size = sector_size;
 
-    write_boot(&sfs, boot_addr);
+    write_boot(sfs, boot_addr);
 
     int i;
-    for(i=sfs.csec; i<=sfs.nsec; i++)
-        sfs_free_sec(&sfs, i);
+    for(i=sfs->csec; i<=sfs->nsec; i++)
+        sfs_free_sec(sfs, i);
 
     // Sort the entries by the level - higher level first
     qsort(&darray_i(flist,0), darray_len(flist), sizeof(darray_i(flist,0)), compare_level);
@@ -240,9 +240,12 @@ char * build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file
             memcpy( &af->data[20], & af->time, 3);
         }
         // Add data
-        int msec = sfs_add_data( &sfs, af->data, af->size);
+        int msec = sfs_add_data( sfs, af->data, af->size);
         if( msec < 0 )
+        {
+            sfs_free(sfs);
             return 0;
+        }
         // Set map sector
         af->map_sect = msec;
         // Add to directory
@@ -268,7 +271,7 @@ char * build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file
             dsec = msec;
 
         if( af->boot_file )
-            sfs.boot_map = msec;
+            sfs->boot_map = msec;
     }
 
     // Set the "parent" directory to all sub-directories
@@ -278,8 +281,8 @@ char * build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file
         if( af->is_dir && af->dir )
         {
             int parent = af->dir->map_sect;
-            sfs_patch_byte(&sfs, af->map_sect, 1, parent & 0xFF);
-            sfs_patch_byte(&sfs, af->map_sect, 2, parent >> 8);
+            sfs_patch_byte(sfs, af->map_sect, 1, parent & 0xFF);
+            sfs_patch_byte(sfs, af->map_sect, 2, parent >> 8);
         }
     }
 
@@ -288,38 +291,61 @@ char * build_spartafs(int sector_size, int num_sectors, unsigned boot_addr, file
         show_error("internal error - no main directory\n");
 
     // Get's CRC32 of current data
-    unsigned crc = crc32(0, sfs.data, sfs.sec_size * sfs.nsec);
+    unsigned crc = crc32(0, sfs->data, sfs->sec_size * sfs->nsec);
 
-    sfs.data[  1] = 0x03;
-    sfs.data[  7] = 0x80;
-    sfs.data[  9] = dsec & 0xFF;
-    sfs.data[ 10] = dsec >> 8;
-    sfs.data[ 11] = sfs.nsec & 0xFF;
-    sfs.data[ 12] = sfs.nsec >> 8;
-    sfs.data[ 13] = (sfs.nsec - sfs.csec + 1) & 0xFF;
-    sfs.data[ 14] = (sfs.nsec - sfs.csec + 1) >> 8;
-    sfs.data[ 15] = sfs.nbmp;
-    sfs.data[ 16] = sfs.bmap & 0xFF;
-    sfs.data[ 17] = sfs.bmap >> 8;
-    sfs.data[ 18] = sfs.csec & 0xFF;
-    sfs.data[ 19] = sfs.csec >> 8;
-    sfs.data[ 20] = sfs.csec & 0xFF;
-    sfs.data[ 21] = sfs.csec >> 8;
-    sfs.data[ 22] = 'D';
-    sfs.data[ 23] = 'S';
-    sfs.data[ 24] = 'K';
-    sfs.data[ 25] = '_';
-    sfs.data[ 26] = hex(crc>>8);
-    sfs.data[ 27] = hex(crc>>12);
-    sfs.data[ 28] = hex(crc>>16);
-    sfs.data[ 29] = hex(crc>>20);
-    sfs.data[ 30] = 0x28;
-    sfs.data[ 31] = sfs.sec_size > 128 ? 0 : 128;
-    sfs.data[ 32] = 0x20;
-    sfs.data[ 39] = crc & 0xFF;
-    sfs.data[ 40] = sfs.boot_map & 0xFF;
-    sfs.data[ 41] = sfs.boot_map >> 8;
+    sfs->data[  1] = 0x03;
+    sfs->data[  7] = 0x80;
+    sfs->data[  9] = dsec & 0xFF;
+    sfs->data[ 10] = dsec >> 8;
+    sfs->data[ 11] = sfs->nsec & 0xFF;
+    sfs->data[ 12] = sfs->nsec >> 8;
+    sfs->data[ 13] = (sfs->nsec - sfs->csec + 1) & 0xFF;
+    sfs->data[ 14] = (sfs->nsec - sfs->csec + 1) >> 8;
+    sfs->data[ 15] = sfs->nbmp;
+    sfs->data[ 16] = sfs->bmap & 0xFF;
+    sfs->data[ 17] = sfs->bmap >> 8;
+    sfs->data[ 18] = sfs->csec & 0xFF;
+    sfs->data[ 19] = sfs->csec >> 8;
+    sfs->data[ 20] = sfs->csec & 0xFF;
+    sfs->data[ 21] = sfs->csec >> 8;
+    sfs->data[ 22] = 'D';
+    sfs->data[ 23] = 'S';
+    sfs->data[ 24] = 'K';
+    sfs->data[ 25] = '_';
+    sfs->data[ 26] = hex(crc>>8);
+    sfs->data[ 27] = hex(crc>>12);
+    sfs->data[ 28] = hex(crc>>16);
+    sfs->data[ 29] = hex(crc>>20);
+    sfs->data[ 30] = 0x28;
+    sfs->data[ 31] = sfs->sec_size > 128 ? 0 : 128;
+    sfs->data[ 32] = 0x20;
+    sfs->data[ 39] = crc & 0xFF;
+    sfs->data[ 40] = sfs->boot_map & 0xFF;
+    sfs->data[ 41] = sfs->boot_map >> 8;
 
-    return sfs.data;
+    return sfs;
 }
 
+char *sfs_get_data(const struct sfs *sfs)
+{
+    return sfs->data;
+}
+
+int sfs_get_num_sectors(const struct sfs *sfs)
+{
+    return sfs->nsec;
+}
+
+int sfs_get_sector_size(const struct sfs *sfs)
+{
+    return sfs->sec_size;
+}
+
+void sfs_free(struct sfs *sfs)
+{
+    if( sfs )
+    {
+        free(sfs->data);
+        free(sfs);
+    }
+}

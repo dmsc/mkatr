@@ -1,3 +1,3 @@
 #pragma once
-const char *prog_version = "1.0-20160614";
+const char *prog_version = "1.1-20160615";
 

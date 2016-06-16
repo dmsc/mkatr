@@ -14,6 +14,13 @@ Options:
 - `-b`  Selects the next file in the command line as the _boot_ file,
         the file will be loaded when the computer boots, and must be
         in the standard Atari binary file format.
+        The bootloader for 128 bytes per sector uses addresses from
+        $700 to $965, and the bootloader for 256 bytes per sector uses
+        addresses from $700 to $A50.
+
+- `-x`  Output image with exact sector count for all available content.
+        This will use non-standard sector counts, and return images with
+        128 bytes per sector if the image is smaller than about 8MB.
 
 - `-h`  Shows a brief help.
 
@@ -23,7 +30,7 @@ To place files inside a sub-directory, simply add the directory *before*
 all the files inside that directory.
 
 The resulting image will be the smaller size that fits all the given files,
-from the following list:
+from the following list (except when the `-x` option is used):
 
 | Sector Count | Sector Size | Total Size | Name                     |
 |         ---: |        ---: |       ---: | :---                     |

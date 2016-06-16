@@ -107,12 +107,23 @@ int main(int argc, char **argv)
     struct sfs *sfs = 0;
     if( exact_size )
     {
-        // Brute force - try all sizes!
-        for(i=6; !sfs && i<65536; i++)
-            sfs = build_spartafs(128, i, boot_addr, &flist);
+        // Try biggest size and the try reducing:
+        sfs = build_spartafs(128, 65535, boot_addr, &flist);
         if( !sfs )
-            for(i=32490; !sfs && i<65536; i++)
-                sfs = build_spartafs(256, i, boot_addr, &flist);
+            sfs = build_spartafs(256, 65535, boot_addr, &flist);
+        int nsec = 65535 - sfs_get_free_sectors(sfs);
+        int ssec = sfs_get_sector_size(sfs);
+
+        for(; nsec>5; nsec--)
+        {
+            struct sfs *n = build_spartafs(ssec, nsec, boot_addr, &flist);
+            if( !n )
+                break;
+            sfs_free(sfs);
+            sfs = n;
+            if( sfs_get_free_sectors(sfs) > 0 )
+                nsec = nsec - sfs_get_free_sectors(sfs) + 1;
+        }
     }
     else
     {

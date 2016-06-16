@@ -341,6 +341,11 @@ int sfs_get_sector_size(const struct sfs *sfs)
     return sfs->sec_size;
 }
 
+int sfs_get_free_sectors(const struct sfs *sfs)
+{
+    return sfs->nsec - sfs->csec + 1;
+}
+
 void sfs_free(struct sfs *sfs)
 {
     if( sfs )

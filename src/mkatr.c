@@ -59,6 +59,7 @@ int main(int argc, char **argv)
     int i;
     unsigned boot_addr = 0x07; // Standard boot address: $800
     int boot_file = 0; // Next file is boot file
+    int exact_size = 0; // Use image of exact size
 
     prog_name = argv[0];
 
@@ -82,6 +83,8 @@ int main(int argc, char **argv)
                         show_error("can specify only one boot file\n");
                     boot_file = 1;
                 }
+                else if( op == 'x' )
+                    exact_size = 1;
                 else if( op == 'v' )
                     show_version();
                 else
@@ -101,17 +104,32 @@ int main(int argc, char **argv)
     if( !out )
         show_error("missing output file name. Try '%s -h' for help.\n", prog_name);
 
-    for(i=0; sectors[i].size; i++)
+    char *data = 0;
+    int nsec = 0;
+    int ssec = 0;
+    if( exact_size )
     {
-        int ssec = sectors[i].size;
-        int nsec = sectors[i].num;
-        char *data = build_spartafs(ssec, nsec, boot_addr, &flist);
-        if( data )
+        // Brute force - try all sizes!
+        ssec = 128;
+        for(nsec=6; !data && nsec<65536; nsec++)
+            data = build_spartafs(ssec, nsec, boot_addr, &flist);
+        if( !data )
         {
-            write_atr(out, data, ssec, nsec);
-            break;
+            ssec = 256;
+            for(nsec=32490; !data && nsec<65536; i++)
+                data = build_spartafs(ssec, nsec, boot_addr, &flist);
         }
-
     }
+    else
+    {
+        for(i=0; !data && sectors[i].size; i++)
+        {
+            nsec = sectors[i].num;
+            ssec = sectors[i].size;
+            data = build_spartafs(ssec, nsec, boot_addr, &flist);
+        }
+    }
+    if( data )
+        write_atr(out, data, ssec, nsec);
     return 0;
 }

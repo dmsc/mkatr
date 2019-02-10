@@ -52,6 +52,8 @@ void show_usage(void)
            "\t-x\tOutput image with exact sector count for all available content.\n"
            "\t  \tThis will use non-standard sector counts and 128 byte sector size.\n"
            "\t-s size\tSpecify the minimal image size to the given size in bytes.\n"
+           "\t-B page\tRelocate the bootloader to this page address. Please, read\n"
+           "\t       \tthe documentation before using this option.\n"
            "\t-h\tShow this help.\n"
            "\t-v\tShow version information.\n",
            prog_name);

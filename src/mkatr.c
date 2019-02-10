@@ -86,6 +86,16 @@ int main(int argc, char **argv)
                 }
                 else if( op == 'x' )
                     exact_size = 1;
+                else if( op == 'B' )
+                {
+                    char *ep;
+                    if( i+1 >= argc )
+                        show_error("option '-B' needs an argument\n");
+                    i++;
+                    boot_addr = strtol(argv[i], &ep, 0);
+                    if( boot_addr <= 3 || boot_addr >= 0xF0 || !ep || *ep )
+                        show_error("argument for option '-B' must be from 3 to 240\n");
+                }
                 else if( op == 's' )
                 {
                     char *ep;

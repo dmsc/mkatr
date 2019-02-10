@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     unsigned boot_addr = 0x07; // Standard boot address: $800
     int boot_file = 0; // Next file is boot file
     int exact_size = 0; // Use image of exact size
+    int min_size = 0; // Minimum image size
 
     prog_name = argv[0];
 
@@ -85,6 +86,18 @@ int main(int argc, char **argv)
                 }
                 else if( op == 'x' )
                     exact_size = 1;
+                else if( op == 's' )
+                {
+                    char *ep;
+                    if( i+1 >= argc )
+                        show_error("option '-s' needs an argument\n");
+                    i++;
+                    min_size = strtol(argv[i], &ep, 0);
+                    if( min_size <= 0 || !ep || *ep )
+                        show_error("argument for option '-s' must be a positive integer\n");
+                    if( min_size > 65535 * 256 )
+                        show_error("maximum image size is 16776960 bytes\n");
+                }
                 else if( op == 'v' )
                     show_version();
                 else
@@ -108,29 +121,46 @@ int main(int argc, char **argv)
     if( exact_size )
     {
         // Try biggest size and the try reducing:
-        sfs = build_spartafs(128, 65535, boot_addr, &flist);
+        if( min_size < 128*65535 )
+            sfs = build_spartafs(128, 65535, boot_addr, &flist);
         if( !sfs )
             sfs = build_spartafs(256, 65535, boot_addr, &flist);
-        int nsec = 65535 - sfs_get_free_sectors(sfs);
-        int ssec = sfs_get_sector_size(sfs);
-
-        for(; nsec>5; nsec--)
+        if( sfs )
         {
-            struct sfs *n = build_spartafs(ssec, nsec, boot_addr, &flist);
-            if( !n )
-                break;
-            sfs_free(sfs);
-            sfs = n;
-            if( sfs_get_free_sectors(sfs) > 0 )
-                nsec = nsec - sfs_get_free_sectors(sfs) + 1;
+            int nsec = 65535 - sfs_get_free_sectors(sfs);
+            int ssec = sfs_get_sector_size(sfs);
+
+            if( nsec*ssec < min_size )
+                nsec = (min_size + ssec - 1) / ssec;
+
+            for(; nsec>5 && (nsec*ssec)>=min_size; nsec--)
+            {
+                struct sfs *n = build_spartafs(ssec, nsec, boot_addr, &flist);
+                if( !n )
+                    break;
+                sfs_free(sfs);
+                sfs = n;
+                if( sfs_get_free_sectors(sfs) > 0 && (nsec-1)*ssec > min_size )
+                {
+                    nsec = nsec - sfs_get_free_sectors(sfs) + 1;
+                    if( nsec*ssec < min_size )
+                        nsec = 1 + (min_size + ssec - 1) / ssec;
+                }
+            }
         }
     }
     else
     {
         for(i=0; !sfs && sectors[i].size; i++)
+        {
+            if( sectors[i].size * sectors[i].num < min_size )
+                continue;
             sfs = build_spartafs(sectors[i].size, sectors[i].num, boot_addr, &flist);
+        }
     }
     if( sfs )
         write_atr(out, sfs_get_data(sfs), sfs_get_sector_size(sfs), sfs_get_num_sectors(sfs));
+    else
+        show_error("can't create an image big enough\n");
     return 0;
 }

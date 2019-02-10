@@ -14,13 +14,23 @@ Options:
 - `-b`  Selects the next file in the command line as the _boot_ file,
         the file will be loaded when the computer boots, and must be
         in the standard Atari binary file format.
-        The bootloader for 128 bytes per sector uses addresses from
-        $700 to $965, and the bootloader for 256 bytes per sector uses
-        addresses from $700 to $A50.
+        The bootloader for 128 bytes per sector needs 613 bytes, from $700 to
+        $965, and the bootloader for 256 bytes per sector needs 848 bytes, from
+        $700 to $A50, both can be relocated with the `-B` option.
 
 - `-x`  Output image with exact sector count for all available content.
         This will use non-standard sector counts, and return images with
         128 bytes per sector if the image is smaller than about 8MB.
+
+- `-s`  Specify the minimum size of the output image, in bytes. The image
+        will be of this size or larger instead of the smaller possible.
+        This allows creating images with available free space.
+
+- `-B`  Specify the page (high part of address) of the start of the bootloader.
+        Use this option to load games or other software with a low loading
+        address that conflicts with the standard address of the bootloader.  A
+        safe value is from page 6 instead of the default page 7, but page 4 or
+        5 is also possible.
 
 - `-h`  Shows a brief help.
 
@@ -29,8 +39,9 @@ Options:
 To place files inside a sub-directory, simply add the directory *before*
 all the files inside that directory.
 
-The resulting image will be the smaller size that fits all the given files,
-from the following list (except when the `-x` option is used):
+The resulting image will be the smaller size that fits all the given files (or
+the minimum specified with `-s`), from the following list (except when the `-x`
+option is used):
 
 | Sector Count | Sector Size | Total Size | Name                     |
 |         ---: |        ---: |       ---: | :---                     |
@@ -43,7 +54,7 @@ from the following list (except when the `-x` option is used):
 |      8192    |       256   |       2M   | hard disk                |
 |     16384    |       256   |       4M   | hard disk                |
 |     32768    |       256   |       8M   | hard disk                |
-|     65536    |       256   |      16M   | biggest possible image   |
+|     65535    |       256   |      16M   | biggest possible image   |
 
 Usage Examples
 --------------

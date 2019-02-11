@@ -27,7 +27,7 @@
 
 static void write_atr(const char *out, const char *data, int ssec, int nsec)
 {
-    int size  = ssec * nsec;
+    int size = (nsec > 3) ? ssec * (nsec - 3) + 128 * 3 : 128 * nsec;
     show_msg("writing image with %d sectors of %d bytes, total %d bytes.\n",
              nsec, ssec, size);
     FILE *f = fopen(out, "wb");
@@ -49,8 +49,17 @@ static void write_atr(const char *out, const char *data, int ssec, int nsec)
     putc(0, f);
     putc(0, f);
     putc(0, f);
-    fwrite(data, ssec, nsec, f);
-    fclose(f);
+
+    for(int i=0; i<nsec; i++)
+    {
+        // First three sectors are 128 bytes
+        if( i < 3 )
+            fwrite(data + ssec * i, 128, 1, f);
+        else
+            fwrite(data + ssec * i, ssec, 1, f);
+    }
+    if( 0 != fclose(f) )
+        show_error("can't write output fil '%s': %s\n", out, strerror(errno));
 }
 
 int main(int argc, char **argv)

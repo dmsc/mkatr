@@ -217,8 +217,12 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
             f->boot_file = boot_file;
             f->data = read_file(f->fname, f->size);
 
-            show_msg("added file '%-20s', %5ld bytes, from '%s'%s.\n", f->pname, (long)f->size,
-                    f->fname, boot_file ? " (boot)" : "");
+            show_msg("added file '%-20s', %5ld bytes, from '%s'%s%s%s%s.\n",
+                    f->pname, (long)f->size, f->fname,
+                    attribs & at_protected ? ", +p" : "",
+                    attribs & at_hidden ? ", +h" : "",
+                    attribs & at_archived ? ", +a" : "",
+                    boot_file ? ", (boot)" : "");
         }
         darray_add(flist, f);
     }

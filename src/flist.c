@@ -146,7 +146,8 @@ void flist_add_main_dir(file_list *flist)
     darray_add(flist, dir);
 }
 
-void flist_add_file(file_list *flist, const char *fname, int boot_file)
+void flist_add_file(file_list *flist, const char *fname, int boot_file,
+                    enum fattr attribs)
 {
     struct stat st;
 
@@ -184,6 +185,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file)
         f->pname = path_name( dir->pname, f->aname);
         f->dir = dir;
         f->level = dir->level + 1;
+        f->attribs = attribs;
 
         if( !f->aname || !strcmp(f->aname, "           ") )
             show_error("can't add file/directory named '%s'\n", fname);

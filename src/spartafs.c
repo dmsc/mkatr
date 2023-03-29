@@ -254,7 +254,7 @@ struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
         {
             char *cdir = dir->data + dir->size;
 
-            cdir[0] = 0x08 | (af->is_dir ? 0x20 : 0x00);
+            cdir[0] = 0x08 | (af->is_dir ? 0x20 : 0x00) | af->attribs;
             cdir[1] = msec & 0xFF;
             cdir[2] = msec >> 8;
             cdir[3] = af->size & 0xFF;

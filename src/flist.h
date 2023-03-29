@@ -21,6 +21,14 @@
 
 #include "darray.h"
 
+/* File attributes */
+enum fattr
+{
+    at_protected = 1,
+    at_hidden = 2,
+    at_archived = 4
+};
+
 /* One file or directory */
 struct afile
 {
@@ -32,6 +40,7 @@ struct afile
     struct afile *dir; // Parent directory
     int  level;        // Leven inside directory structure, 0 = root
     int  is_dir;
+    enum fattr attribs;
     int  boot_file;
     int  map_sect;
     char date[3];
@@ -41,5 +50,5 @@ struct afile
 typedef darray(struct afile *) file_list;
 
 void flist_add_main_dir(file_list *flist);
-void flist_add_file(file_list *flist, const char *fname, int boot_file);
+void flist_add_file(file_list *flist, const char *fname, int boot_file, enum fattr attribs);
 

@@ -7,7 +7,7 @@ in the command line, in the SpartaDOS / BW-DOS disk format.
 Program Usage
 -------------
 
-    mkatr [options] output filenames
+    mkatr [options] output [+attributes] filenames
 
 Options:
 
@@ -35,6 +35,15 @@ Options:
 - `-h`  Shows a brief help.
 
 - `-v`  Shows version information.
+
+Also, in front of each file name you can optionally add a list of attributes to
+be set for that file:
+
+- `+p`  Marks this file as protected (read-only).
+
+- `+h`  Hide file from directory. This only works in SpartaDOS-X.
+
+- `+a`  Marks the file as "archived". This only works in SpartaDOS-X.
 
 To place files inside a sub-directory, simply add the directory *before*
 all the files inside that directory.
@@ -64,10 +73,10 @@ directory:
 
     mkatr disk1.atr atari/*
 
-To create a bootable BW-DOS image with the DOS files inside a
-subdirectory and a startup.bat file outside:
+To create a bootable BW-DOS image with a hidden and protected DOS file inside
+a subdirectory and a protected `startup.bat` file outside:
 
-    mkatr bwdos.atr dos/ -b dos/xbw130.dos startup.bat
+    mkatr bwdos.atr dos/ -b +ph dos/xbw130.dos +p startup.bat
 
 To create an image with only one file that will be loaded at boot:
 

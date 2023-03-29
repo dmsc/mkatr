@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     int i;
     unsigned boot_addr = 0x07; // Standard boot address: $800
     int boot_file = 0; // Next file is boot file
+    enum fattr attribs = 0; // Next file attributes
     int exact_size = 0; // Use image of exact size
     int min_size = 0; // Minimum image size
 
@@ -124,13 +125,32 @@ int main(int argc, char **argv)
                                op, prog_name);
             }
         }
+        else if( arg[0] == '+' )
+        {
+            char op;
+            while( 0 != (op = *++arg) )
+            {
+                if( op == '+' )
+                    continue;
+                if( op == 'h' || op == 'H' )
+                    attribs |= at_hidden;
+                else if( op == 'p' || op == 'P' )
+                    attribs |= at_protected;
+                else if( op == 'a' || op == 'A' )
+                    attribs |= at_archived;
+                else
+                    show_error("invalid attribute '+%c'. Try '%s -h' for help.\n",
+                               op, prog_name);
+            }
+        }
         else if( !out && boot_file != 1 )
             out = arg;
         else
         {
-            flist_add_file(&flist, arg, boot_file == 1);
+            flist_add_file(&flist, arg, boot_file == 1, attribs);
             if( boot_file )
                 boot_file = -1;
+            attribs = 0;
         }
     }
     if( !out )

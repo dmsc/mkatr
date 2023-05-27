@@ -288,7 +288,7 @@ struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
 
     // Check main directory
     if( dsec < 0 )
-        show_error("internal error - no main directory\n");
+        show_error("internal error - no main directory.");
 
     // Get's CRC32 of current data
     unsigned crc = crc32(0, sfs->data, sfs->sec_size * sfs->nsec);

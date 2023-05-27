@@ -28,11 +28,11 @@
 static void write_atr(const char *out, const char *data, int ssec, int nsec)
 {
     int size = (nsec > 3) ? ssec * (nsec - 3) + 128 * 3 : 128 * nsec;
-    show_msg("writing image with %d sectors of %d bytes, total %d bytes.\n",
+    show_msg("writing image with %d sectors of %d bytes, total %d bytes.",
              nsec, ssec, size);
     FILE *f = fopen(out, "wb");
     if( !f )
-        show_error("can't open output file '%s': %s\n", out, strerror(errno));
+        show_error("can't open output file '%s': %s", out, strerror(errno));
     putc(0x96, f);
     putc(0x02, f);
     putc(size>>4, f);
@@ -59,7 +59,7 @@ static void write_atr(const char *out, const char *data, int ssec, int nsec)
             fwrite(data + ssec * i, ssec, 1, f);
     }
     if( 0 != fclose(f) )
-        show_error("can't write output fil '%s': %s\n", out, strerror(errno));
+        show_error("can't write output fil '%s': %s", out, strerror(errno));
 }
 
 int main(int argc, char **argv)
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
                 else if( op == 'b' )
                 {
                     if( boot_file )
-                        show_error("can specify only one boot file\n");
+                        show_error("can specify only one boot file.");
                     boot_file = 1;
                 }
                 else if( op == 'x' )
@@ -100,28 +100,28 @@ int main(int argc, char **argv)
                 {
                     char *ep;
                     if( i+1 >= argc )
-                        show_error("option '-B' needs an argument\n");
+                        show_error("option '-B' needs an argument.");
                     i++;
                     boot_addr = strtol(argv[i], &ep, 0);
                     if( boot_addr <= 3 || boot_addr >= 0xF0 || !ep || *ep )
-                        show_error("argument for option '-B' must be from 3 to 240\n");
+                        show_error("argument for option '-B' must be from 3 to 240.");
                 }
                 else if( op == 's' )
                 {
                     char *ep;
                     if( i+1 >= argc )
-                        show_error("option '-s' needs an argument\n");
+                        show_error("option '-s' needs an argument.");
                     i++;
                     min_size = strtol(argv[i], &ep, 0);
                     if( min_size <= 0 || !ep || *ep )
-                        show_error("argument for option '-s' must be a positive integer\n");
+                        show_error("argument for option '-s' must be a positive integer.");
                     if( min_size > 65535 * 256 )
-                        show_error("maximum image size is 16776960 bytes\n");
+                        show_error("maximum image size is 16776960 bytes.");
                 }
                 else if( op == 'v' )
                     show_version();
                 else
-                    show_error("invalid command line option '-%c'. Try '%s -h' for help.\n",
+                    show_error("invalid command line option '-%c'. Try '%s -h' for help.",
                                op, prog_name);
             }
         }
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
                 else if( op == 'a' || op == 'A' )
                     attribs |= at_archived;
                 else
-                    show_error("invalid attribute '+%c'. Try '%s -h' for help.\n",
+                    show_error("invalid attribute '+%c'. Try '%s -h' for help.",
                                op, prog_name);
             }
         }
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
         }
     }
     if( !out )
-        show_error("missing output file name. Try '%s -h' for help.\n", prog_name);
+        show_error("missing output file name. Try '%s -h' for help.", prog_name);
 
     struct sfs *sfs = 0;
     if( exact_size )
@@ -200,6 +200,6 @@ int main(int argc, char **argv)
     if( sfs )
         write_atr(out, sfs_get_data(sfs), sfs_get_sector_size(sfs), sfs_get_num_sectors(sfs));
     else
-        show_error("can't create an image big enough\n");
+        show_error("can't create an image big enough.");
     return 0;
 }

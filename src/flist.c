@@ -33,10 +33,10 @@ static char *read_file(const char *fname, size_t size)
     char *data;
     FILE *f = fopen(fname, "rb");
     if( !f )
-        show_error("can't open file '%s': %s\n", fname, strerror(errno));
+        show_error("can't open file '%s': %s", fname, strerror(errno));
     data = malloc(size);
     if( size != fread(data, 1, size, f) )
-        show_error("error reading file '%s': %s\n", fname, strerror(errno));
+        show_error("error reading file '%s': %s", fname, strerror(errno));
     fclose(f);
     return data;
 }
@@ -152,7 +152,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
     struct stat st;
 
     if( 0 != stat(fname, &st) )
-        show_error("reading input file '%s': %s\n", fname, strerror(errno));
+        show_error("reading input file '%s': %s", fname, strerror(errno));
 
     if( S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) )
     {
@@ -169,7 +169,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
         }
 
         if( !dir )
-            show_error("internal error - no main directory\n");
+            show_error("internal error - no main directory");
 
         // Convert time to broken time
         struct tm *tim = localtime(&st.st_mtime);
@@ -188,14 +188,14 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
         f->attribs = attribs;
 
         if( !f->aname || !strcmp(f->aname, "           ") )
-            show_error("can't add file/directory named '%s'\n", fname);
+            show_error("can't add file/directory named '%s'", fname);
 
         // Search for repeated files
         darray_foreach(ptr, flist)
         {
             struct afile *af = *ptr;
             if( af->dir == f->dir && !strncmp(af->aname, f->aname, 11) )
-                show_error("repeated file/directory named '%s'\n", f->pname);
+                show_error("repeated file/directory named '%s'", f->pname);
         }
 
         if( S_ISDIR(st.st_mode) )
@@ -205,19 +205,19 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
             f->boot_file = 0;
             f->data = malloc(32768); // Maximum length of a directory: 32k
 
-            show_msg("added dir  '%-20s', from '%s'.\n", f->pname, f->fname);
+            show_msg("added dir  '%-20s', from '%s'.", f->pname, f->fname);
         }
         else
         {
             if( st.st_size > 0x1000000 )
-                show_error("file size too big '%s'\n", fname);
+                show_error("file size too big '%s'", fname);
 
             f->size = st.st_size;
             f->is_dir = 0;
             f->boot_file = boot_file;
             f->data = read_file(f->fname, f->size);
 
-            show_msg("added file '%-20s', %5ld bytes, from '%s'%s%s%s%s.\n",
+            show_msg("added file '%-20s', %5ld bytes, from '%s'%s%s%s%s.",
                     f->pname, (long)f->size, f->fname,
                     attribs & at_protected ? ", +p" : "",
                     attribs & at_hidden ? ", +h" : "",
@@ -227,6 +227,6 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
         darray_add(flist, f);
     }
     else
-        show_error("invalid file type '%s'\n", fname);
+        show_error("invalid file type '%s'", fname);
 }
 

@@ -28,20 +28,22 @@ const char *prog_name;
 void show_error(const char *format, ...)
 {
     va_list ap;
-    printf("%s: Error, ", prog_name);
+    fprintf(stderr, "%s: Error, ", prog_name);
     va_start(ap, format);
-    vprintf(format, ap);
+    vfprintf(stderr, format, ap);
     va_end(ap);
+    fprintf(stderr, "\n");
     exit(EXIT_FAILURE);
 }
 
 void show_msg(const char *format, ...)
 {
     va_list ap;
-    printf("%s: ", prog_name);
+    fprintf(stderr, "%s: ", prog_name);
     va_start(ap, format);
-    vprintf(format, ap);
+    vfprintf(stderr, format, ap);
     va_end(ap);
+    fprintf(stderr, "\n");
 }
 
 void show_usage(void)

@@ -15,7 +15,7 @@
 #  with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 
-SOURCES=\
+SOURCES_MKATR=\
  crc32.c\
  darray.c\
  flist.c\
@@ -23,14 +23,23 @@ SOURCES=\
  msg.c\
  spartafs.c\
 
+SOURCES_LSATR=\
+ atr.c\
+ lsatr.c\
+ msg.c\
+
 CFLAGS=-O2 -Wall
 LDFLAGS=
 
+SOURCES=$(sort $(SOURCES_MKDIR) $(SOURCES_LSDIR))
+
 BUILD_DIR=obj
-OBJS=$(addprefix $(BUILD_DIR)/,$(SOURCES:%.c=%.o))
+OBJS_MKATR=$(addprefix $(BUILD_DIR)/,$(SOURCES_MKATR:%.c=%.o))
+OBJS_LSATR=$(addprefix $(BUILD_DIR)/,$(SOURCES_LSATR:%.c=%.o))
+OBJS=$(sort $(OBJS_MKATR) $(OBJS_LSATR))
 DEPS=$(OBJS:%.o=%.d)
 
-all: mkatr
+all: mkatr lsatr
 
 
 clean:
@@ -49,7 +58,10 @@ $(BUILD_DIR)/%.o: src/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # Link
-mkatr: $(OBJS)
+mkatr: $(OBJS_MKATR)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+lsatr: $(OBJS_LSATR)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 # Dependencies

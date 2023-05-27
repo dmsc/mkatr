@@ -24,5 +24,4 @@ extern const char *prog_name;
 void show_error(const char *format, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void show_opt_error(const char *format, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void show_msg(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
-void show_usage(void);
 void show_version(void);

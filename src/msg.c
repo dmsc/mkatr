@@ -57,27 +57,6 @@ void show_opt_error(const char *format, ...)
     exit(EXIT_FAILURE);
 }
 
-void show_usage(void)
-{
-    printf("Usage: %s [options] <output_atr> [+attributes] <file_1> [... <file_n>]\n"
-           "Options:\n"
-           "\t-b\tNext file added will be loaded at boot.\n"
-           "\t-x\tOutput image with exact sector count for all available content.\n"
-           "\t  \tThis will use non-standard sector counts and 128 byte sector size.\n"
-           "\t-s size\tSpecify the minimal image size to the given size in bytes.\n"
-           "\t-B page\tRelocate the bootloader to this page address. Please, read\n"
-           "\t       \tthe documentation before using this option.\n"
-           "\t-h\tShow this help.\n"
-           "\t-v\tShow version information.\n"
-           "\n"
-           "In front of each file, you can also add attributes:\n"
-           "\t+h\tHidden from directory.\n"
-           "\t+p\tRead-only (protected) file.\n"
-           "\t+a\tArchived file.\n",
-           prog_name);
-    exit(EXIT_SUCCESS);
-}
-
 void show_version(void)
 {
     printf("mkatr version %s, Copyright (C) 2016-2023 Daniel Serpell\n\n"

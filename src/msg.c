@@ -46,6 +46,17 @@ void show_msg(const char *format, ...)
     fprintf(stderr, "\n");
 }
 
+void show_opt_error(const char *format, ...)
+{
+    va_list ap;
+    fprintf(stderr, "%s: Error, ", prog_name);
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+    fprintf(stderr, ". Try '%s -h' for help.\n", prog_name);
+    exit(EXIT_FAILURE);
+}
+
 void show_usage(void)
 {
     printf("Usage: %s [options] <output_atr> [+attributes] <file_1> [... <file_n>]\n"

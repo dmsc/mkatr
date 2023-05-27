@@ -100,7 +100,7 @@ int main(int argc, char **argv)
                 {
                     char *ep;
                     if( i+1 >= argc )
-                        show_error("option '-B' needs an argument.");
+                        show_opt_error("option '-B' needs an argument");
                     i++;
                     boot_addr = strtol(argv[i], &ep, 0);
                     if( boot_addr <= 3 || boot_addr >= 0xF0 || !ep || *ep )
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
                 {
                     char *ep;
                     if( i+1 >= argc )
-                        show_error("option '-s' needs an argument.");
+                        show_opt_error("option '-s' needs an argument");
                     i++;
                     min_size = strtol(argv[i], &ep, 0);
                     if( min_size <= 0 || !ep || *ep )
@@ -121,8 +121,7 @@ int main(int argc, char **argv)
                 else if( op == 'v' )
                     show_version();
                 else
-                    show_error("invalid command line option '-%c'. Try '%s -h' for help.",
-                               op, prog_name);
+                    show_opt_error("invalid command line option '-%c'", op);
             }
         }
         else if( arg[0] == '+' )
@@ -139,8 +138,7 @@ int main(int argc, char **argv)
                 else if( op == 'a' || op == 'A' )
                     attribs |= at_archived;
                 else
-                    show_error("invalid attribute '+%c'. Try '%s -h' for help.",
-                               op, prog_name);
+                    show_opt_error("invalid attribute '+%c'", op);
             }
         }
         else if( !out && boot_file != 1 )
@@ -154,7 +152,7 @@ int main(int argc, char **argv)
         }
     }
     if( !out )
-        show_error("missing output file name. Try '%s -h' for help.", prog_name);
+        show_opt_error("missing output file name");
 
     struct sfs *sfs = 0;
     if( exact_size )

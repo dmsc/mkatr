@@ -20,4 +20,3 @@
 #pragma once
 
 unsigned crc32(unsigned crc, const char *buf, unsigned len);
-

@@ -19,8 +19,8 @@
  */
 #include "msg.h"
 #include "version.h"
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 const char *prog_name;

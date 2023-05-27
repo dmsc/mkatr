@@ -20,7 +20,7 @@
 
 static void memory_error(void)
 {
-    fprintf(stderr,"INTERNAL ERROR: memory allocation failure.\n");
+    fprintf(stderr, "INTERNAL ERROR: memory allocation failure.\n");
     abort();
 }
 
@@ -29,7 +29,7 @@ void darray_fill_ptr(void *arr, size_t sz, size_t init)
     darray(char) *ret = arr;
     if( !ret || !(ret->data = malloc(sz * init)) )
         memory_error();
-    ret->len = 0;
+    ret->len  = 0;
     ret->size = init;
 }
 

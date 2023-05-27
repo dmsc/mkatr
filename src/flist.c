@@ -19,14 +19,14 @@
  */
 #include "flist.h"
 #include "msg.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 static char *read_file(const char *fname, size_t size)
 {
@@ -90,7 +90,7 @@ static char *atari_name(const char *fname)
             break;
         else if( c >= 'a' && c <= 'z' )
             out[pos] = c - 'a' + 'A';
-        else if( (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+        else if( (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') )
             out[pos] = c;
         else
             out[pos] = '_';
@@ -101,12 +101,12 @@ static char *atari_name(const char *fname)
 
 static char *path_name(const char *dir, const char *name)
 {
-    size_t n = strlen(dir);
-    char *ret = malloc(n+14);
+    size_t n  = strlen(dir);
+    char *ret = malloc(n + 14);
     strcpy(ret, dir);
     ret[n++] = '>';
     int i;
-    for(i=0;i<11;i++)
+    for( i = 0; i < 11; i++ )
     {
         if( name[i] != ' ' )
         {
@@ -124,24 +124,24 @@ void flist_add_main_dir(file_list *flist)
     // Creates MAIN directory
     struct afile *dir = malloc(sizeof(struct afile));
     // Convert time to broken time
-    time_t ttim = time(0);
+    time_t ttim    = time(0);
     struct tm *tim = localtime(&ttim);
 
-    dir->date[0] = tim->tm_mday;
-    dir->date[1] = tim->tm_mon+1;
-    dir->date[2] = tim->tm_year % 100;
-    dir->time[0] = tim->tm_hour;
-    dir->time[1] = tim->tm_min;
-    dir->time[2] = tim->tm_sec;
-    dir->fname = "";
-    dir->aname = "MAIN       ";
-    dir->pname = "";
-    dir->dir = 0;
-    dir->size = 23;
-    dir->is_dir = 1;
+    dir->date[0]   = tim->tm_mday;
+    dir->date[1]   = tim->tm_mon + 1;
+    dir->date[2]   = tim->tm_year % 100;
+    dir->time[0]   = tim->tm_hour;
+    dir->time[1]   = tim->tm_min;
+    dir->time[2]   = tim->tm_sec;
+    dir->fname     = "";
+    dir->aname     = "MAIN       ";
+    dir->pname     = "";
+    dir->dir       = 0;
+    dir->size      = 23;
+    dir->is_dir    = 1;
     dir->boot_file = 0;
-    dir->data = malloc(32768); // Maximum length of a directory: 32k
-    dir->level = 0;
+    dir->data      = malloc(32768); // Maximum length of a directory: 32k
+    dir->level     = 0;
 
     darray_add(flist, dir);
 }
@@ -164,7 +164,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
         {
             struct afile *af = *ptr;
             if( af->is_dir && fname == strstr(fname, af->fname) &&
-                ( !dir || strlen(dir->fname) < strlen(af->fname) ) )
+                (!dir || strlen(dir->fname) < strlen(af->fname)) )
                 dir = af;
         }
 
@@ -175,16 +175,16 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
         struct tm *tim = localtime(&st.st_mtime);
 
         f->date[0] = tim->tm_mday;
-        f->date[1] = tim->tm_mon+1;
+        f->date[1] = tim->tm_mon + 1;
         f->date[2] = tim->tm_year % 100;
         f->time[0] = tim->tm_hour;
         f->time[1] = tim->tm_min;
         f->time[2] = tim->tm_sec;
-        f->fname = fname;
-        f->aname = atari_name(fname);
-        f->pname = path_name( dir->pname, f->aname);
-        f->dir = dir;
-        f->level = dir->level + 1;
+        f->fname   = fname;
+        f->aname   = atari_name(fname);
+        f->pname   = path_name(dir->pname, f->aname);
+        f->dir     = dir;
+        f->level   = dir->level + 1;
         f->attribs = attribs;
 
         if( !f->aname || !strcmp(f->aname, "           ") )
@@ -200,10 +200,10 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
 
         if( S_ISDIR(st.st_mode) )
         {
-            f->size = 23;
-            f->is_dir = 1;
+            f->size      = 23;
+            f->is_dir    = 1;
             f->boot_file = 0;
-            f->data = malloc(32768); // Maximum length of a directory: 32k
+            f->data      = malloc(32768); // Maximum length of a directory: 32k
 
             show_msg("added dir  '%-20s', from '%s'.", f->pname, f->fname);
         }
@@ -212,21 +212,18 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
             if( st.st_size > 0x1000000 )
                 show_error("file size too big '%s'", fname);
 
-            f->size = st.st_size;
-            f->is_dir = 0;
+            f->size      = st.st_size;
+            f->is_dir    = 0;
             f->boot_file = boot_file;
-            f->data = read_file(f->fname, f->size);
+            f->data      = read_file(f->fname, f->size);
 
-            show_msg("added file '%-20s', %5ld bytes, from '%s'%s%s%s%s.",
-                    f->pname, (long)f->size, f->fname,
-                    attribs & at_protected ? ", +p" : "",
-                    attribs & at_hidden ? ", +h" : "",
-                    attribs & at_archived ? ", +a" : "",
-                    boot_file ? ", (boot)" : "");
+            show_msg("added file '%-20s', %5ld bytes, from '%s'%s%s%s%s.", f->pname,
+                     (long)f->size, f->fname, attribs & at_protected ? ", +p" : "",
+                     attribs & at_hidden ? ", +h" : "",
+                     attribs & at_archived ? ", +a" : "", boot_file ? ", (boot)" : "");
         }
         darray_add(flist, f);
     }
     else
         show_error("invalid file type '%s'", fname);
 }
-

@@ -69,11 +69,11 @@ option is used):
 |     32768    |       256   |       8M   | hard disk                |
 |     65535    |       256   |      16M   | biggest possible image   |
 
-lsatr: List contents of ATR images
-----------------------------------
+lsatr: List and extract contents of ATR images
+----------------------------------------------
 
-This program list the contents of an Atari `ATR` disk image with a SpartaDOS /
-BW-DOS disk format.
+This program list or extracts the contents of an Atari `ATR` disk image with a
+SpartaDOS / BW-DOS disk format.
 
 Usage:
 
@@ -87,7 +87,11 @@ Options:
         Standard listing format shows the size, the date, time and the full
         path at the end.
 
-- `-l`  Show all filenames in lowercase.
+- `-l`  Show or extract all filenames in lowercase.
+
+- `-x`  Extract all files in the current directory.
+
+- `-X`  Extract all files in the directory given as argument to the option.
 
 - `-h`  Shows a brief help.
 
@@ -110,13 +114,17 @@ To create an image with only one file that will be loaded at boot:
 
     mkatr game.atr -b mygame.com
 
-To list the files inside an image.
+To list the files inside an image:
 
     lsatr bwdos.atr
+
+To extract all files from the image to a folder `out`:
+
+    lsatr -X out/ bwdos.atr
 
 Compilation
 -----------
 
-Compile with `make` and copy the resulting `mkatr` program to your bin
-folder.
+Compile with `make` and copy the resulting `mkatr` and `lsatr` programs to your
+bin folder.
 

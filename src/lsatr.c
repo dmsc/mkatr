@@ -137,6 +137,7 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
     if( !len )
     {
         show_msg("%s: can´t get directory data", name);
+        free(data);
         return;
     }
     else if( len == 65536 )
@@ -147,7 +148,7 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
     {
         unsigned flags = data[i];
         if( !flags )
-            return; // no more entries
+            break; // no more entries
         if( 0 == (flags & 0x08) )
             continue; // unused
         if( 0x10 == (flags & 0x10) )
@@ -198,7 +199,9 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
                        fd_yea, ft_hh, ft_mm, ft_ss, new_name);
             free(fdata);
         }
+        free(new_name);
     }
+    free(data);
 }
 
 int main(int argc, char **argv)
@@ -265,6 +268,7 @@ int main(int argc, char **argv)
 
     printf("%s: %u sectors of %u bytes.\n", atr_name, atr->sec_count, atr->sec_size);
     read_dir(atr, rootdir_map, 0);
+    atr_free(atr);
 
     return 0;
 }

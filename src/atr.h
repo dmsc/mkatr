@@ -28,3 +28,4 @@ struct atr_image
 };
 
 struct atr_image *load_atr_image(const char *file_name);
+void atr_free(struct atr_image *atr);

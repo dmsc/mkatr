@@ -132,6 +132,9 @@ static unsigned get_name(char *name, char *aname, const uint8_t *data)
 
 static void read_dir(struct atr_image *atr, unsigned map, const char *name)
 {
+    if( atari_list )
+        printf("Directory of %s\n\n", *name ? name : "/");
+
     uint8_t *data = malloc(65536); // max directory size (2848 entries)
     unsigned len  = read_file(atr, map, 65536, data);
     if( !len )
@@ -169,21 +172,21 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
             continue;
         }
         char *new_name;
-        if( name )
-            asprintf(&new_name, "%s/%s", name, fname);
-        else
-            new_name = strdup(fname);
+        asprintf(&new_name, "%s/%s", name, fname);
         if( is_dir )
         {
             if( atari_list )
-                printf("%-12s     DIR %02d-%02d-%02d %02d:%02d\n", aname, fd_day, fd_mon,
+            {
+                // Print entry, but don´t recurse
+                printf("%-12s  <DIR>  %02d-%02d-%02d %02d:%02d\n", aname, fd_day, fd_mon,
                        fd_yea, ft_hh, ft_mm);
+            }
             else
+            {
                 printf("%8u\t%02d-%02d-%02d %02d:%02d:%02d\t%s/\n", 0, fd_day, fd_mon,
                        fd_yea, ft_hh, ft_mm, ft_ss, new_name);
-            read_dir(atr, fmap, new_name);
-            if( atari_list )
-                printf("<            END DIR\n");
+                read_dir(atr, fmap, new_name);
+            }
         }
         else
         {
@@ -200,6 +203,31 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
             free(fdata);
         }
         free(new_name);
+    }
+    // traverse dir again if listing in Atari format, to show sub directories
+    if( atari_list )
+    {
+        printf("\n");
+        for( unsigned i = 23; i < len; i += 23 )
+        {
+            unsigned flags = data[i];
+            if( !flags )
+                break; // no more entries
+            if( 0 == (flags & 0x08) )
+                continue; // unused
+            if( 0x10 == (flags & 0x10) )
+                continue; // erased
+            if( 0 == (flags & 0x20) )
+                continue; // not directory
+            unsigned fmap  = read16(data + i + 1);
+            char fname[32], aname[32];
+            if( !get_name(fname, aname, data + i + 6) )
+                continue;
+            char *new_name;
+            asprintf(&new_name, "%s/%s", name, fname);
+            read_dir(atr, fmap, new_name);
+            free(new_name);
+        }
     }
     free(data);
 }
@@ -267,7 +295,7 @@ int main(int argc, char **argv)
         show_error("%s: invalid SpartaDOS file system, bitmap outside disk.", atr_name);
 
     printf("%s: %u sectors of %u bytes.\n", atr_name, atr->sec_count, atr->sec_size);
-    read_dir(atr, rootdir_map, 0);
+    read_dir(atr, rootdir_map, "");
     atr_free(atr);
 
     return 0;

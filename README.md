@@ -1,11 +1,15 @@
-ATR disk image creation tool
-----------------------------
+Atri ATR disk image tools
+-------------------------
+
+Tools to create, list and extract Atari `ATR` disk images.
+
+mkatr: Create ATR images from list of files
+-------------------------------------------
 
 This program creates Atari `ATR` disk images from a list of files given
 in the command line, in the SpartaDOS / BW-DOS disk format.
 
-Program Usage
--------------
+Usage:
 
     mkatr [options] output [+attributes] filenames
 
@@ -65,6 +69,30 @@ option is used):
 |     32768    |       256   |       8M   | hard disk                |
 |     65535    |       256   |      16M   | biggest possible image   |
 
+lsatr: List contents of ATR images
+----------------------------------
+
+This program list the contents of an Atari `ATR` disk image with a SpartaDOS /
+BW-DOS disk format.
+
+Usage:
+
+    lsatr [options] filenames.atr
+
+Options:
+
+- `-a`  Shows the listing in the same format of native Atari tools,
+        this is the file name separated by spaces to the file extension,
+        followed by the size, date and time.
+        Standard listing format shows the size, the date, time and the full
+        path at the end.
+
+- `-l`  Show all filenames in lowercase.
+
+- `-h`  Shows a brief help.
+
+- `-v`  Shows version information.
+
 Usage Examples
 --------------
 
@@ -82,6 +110,9 @@ To create an image with only one file that will be loaded at boot:
 
     mkatr game.atr -b mygame.com
 
+To list the files inside an image.
+
+    lsatr bwdos.atr
 
 Compilation
 -----------

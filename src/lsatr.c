@@ -31,6 +31,11 @@
 #include <unistd.h>
 #include <utime.h>
 
+// Windows compatibility:
+#if (defined(_WIN32) || defined(__WIN32__))
+#define mkdir(A, B) mkdir(A)
+#endif
+
 //---------------------------------------------------------------------
 // Global options
 static int atari_list;
@@ -144,6 +149,7 @@ static void set_times(const char *path, int d_day, int d_mon, int d_yea, int t_h
 {
     struct utimbuf tb;
     struct tm t;
+    memset(&t, 0, sizeof(t));
     t.tm_sec    = t_ss;
     t.tm_min    = t_mm;
     t.tm_hour   = t_hh;
@@ -151,8 +157,6 @@ static void set_times(const char *path, int d_day, int d_mon, int d_yea, int t_h
     t.tm_mon    = d_mon;
     t.tm_year   = d_yea > 83 ? d_yea : d_yea + 100;
     t.tm_isdst  = -1;
-    t.tm_gmtoff = 0;
-    t.tm_zone   = 0;
     tb.actime = tb.modtime = mktime(&t);
     utime(path, &tb);
 }

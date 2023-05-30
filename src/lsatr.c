@@ -116,13 +116,13 @@ static unsigned read_file(struct atr_image *atr, unsigned map, unsigned size,
 }
 
 // Read data and write a UNIX filename and an "Atari" filename.
-static unsigned get_name(char *name, char *aname, const uint8_t *data)
+static unsigned get_name(char *name, char *aname, const uint8_t *data, int max)
 {
     unsigned l = 0;
     int dot    = 0;
-    memset(aname, ' ', 12);
-    aname[12] = 0;
-    for( int i = 0; i < 11; i++ )
+    memset(aname, ' ', max + 1);
+    aname[max + 1] = 0;
+    for( int i = 0; i < max; i++ )
     {
         uint8_t c = data[i];
         if( c >= 'A' && c <= 'Z' && lower_case )
@@ -197,7 +197,7 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
         int ft_mm      = data[i + 21];
         int ft_ss      = data[i + 22];
         char fname[32], aname[32];
-        if( !get_name(fname, aname, data + i + 6) || !*fname )
+        if( !get_name(fname, aname, data + i + 6, 11) || !*fname )
         {
             show_msg("%s: invalid file name, skip", name);
             continue;
@@ -289,7 +289,7 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
                 continue; // not directory
             unsigned fmap = read16(data + i + 1);
             char fname[32], aname[32];
-            if( !get_name(fname, aname, data + i + 6) )
+            if( !get_name(fname, aname, data + i + 6, 11) )
                 continue;
             char *new_name;
             asprintf(&new_name, "%s/%s", name, fname);
@@ -361,6 +361,9 @@ int main(int argc, char **argv)
     unsigned num_sect    = read16(atr->data + 11);
     unsigned bitmap_sect = read16(atr->data + 16);
     unsigned sector_size = atr->data[31] ? atr->data[31] : 256;
+    char vol_name[32], aname[32];
+    if( !get_name(vol_name, aname, atr->data + 22, 8) )
+        vol_name[0] = 0;
 
     if( signature != 0x80 )
         show_error("%s: ATR image does not holds a SpartaDOS file system.", atr_name);
@@ -381,7 +384,14 @@ int main(int argc, char **argv)
     if( ext_path && chdir(ext_path) )
         show_error("%s: invalid extract path, %s", ext_path, strerror(errno));
 
-    printf("%s: %u sectors of %u bytes.\n", atr_name, atr->sec_count, atr->sec_size);
+    if( atari_list )
+        printf("ATR image: %s\n"
+               "Image size: %u sectors of %u bytes\n"
+               "Volume Name: %s\n", atr_name, atr->sec_count, atr->sec_size,
+               *vol_name ? vol_name : "NONE");
+    else
+        printf("%s: %u sectors of %u bytes, volume name '%s'.\n", atr_name,
+                atr->sec_count, atr->sec_size, vol_name);
     read_dir(atr, rootdir_map, "");
     atr_free(atr);
 

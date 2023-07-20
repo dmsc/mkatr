@@ -68,6 +68,28 @@ static unsigned read24(const uint8_t *p)
     return p[0] | (p[1] << 8) | (p[2] << 16);
 }
 
+// Get maximum size of file at given map sector
+static unsigned file_msize(struct atr_image *atr, unsigned map)
+{
+    if( map < 2 || map > atr->sec_count )
+    {
+        show_msg("invalid sector map");
+        return 0;
+    }
+    unsigned size    = 0;
+    while( map > 1 && map <= atr->sec_count )
+    {
+        const uint8_t *m = atr->data + atr->sec_size * (map - 1);
+        // Iterate all sectors of map
+        for( int s = 4; s < atr->sec_size; s+=2 )
+            if( read16(m + s) )
+                size += atr->sec_size;
+        // next map
+        map = read16(m);
+    }
+    return size;
+}
+
 // Read up to size bytes from file at given map sector
 static unsigned read_file(struct atr_image *atr, unsigned map, unsigned size,
                           uint8_t *data)
@@ -232,7 +254,8 @@ static void read_dir(struct atr_image *atr, unsigned map, const char *name)
             }
             else
             {
-                printf("%8u\t%02d-%02d-%02d %02d:%02d:%02d\t%s/\n", 0, fd_day, fd_mon,
+                unsigned dirsz = file_msize(atr, fmap);
+                printf("%8u\t%02d-%02d-%02d %02d:%02d:%02d\t%s/\n", dirsz, fd_day, fd_mon,
                        fd_yea, ft_hh, ft_mm, ft_ss, new_name);
                 read_dir(atr, fmap, new_name);
             }

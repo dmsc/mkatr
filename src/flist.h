@@ -47,6 +47,9 @@ struct afile
     char time[3];
 };
 
+/* Max directory size in bytes, 32kb */
+#define SFS_MAX_DIR_SIZE 32768
+
 typedef darray(struct afile *) file_list;
 
 void flist_add_main_dir(file_list *flist);

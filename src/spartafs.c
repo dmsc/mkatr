@@ -267,6 +267,8 @@ struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
             memcpy(&cdir[20], &af->time, 3);
 
             dir->size += 23;
+            if( dir->size > SFS_MAX_DIR_SIZE )
+                show_error("too many files in directory %s.", dir->pname);
         }
         else
             // This is the main directory, remember location

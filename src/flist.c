@@ -140,7 +140,7 @@ void flist_add_main_dir(file_list *flist)
     dir->size      = 23;
     dir->is_dir    = 1;
     dir->boot_file = 0;
-    dir->data      = malloc(32768); // Maximum length of a directory: 32k
+    dir->data      = malloc(SFS_MAX_DIR_SIZE);
     dir->level     = 0;
 
     darray_add(flist, dir);
@@ -203,7 +203,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
             f->size      = 23;
             f->is_dir    = 1;
             f->boot_file = 0;
-            f->data      = malloc(32768); // Maximum length of a directory: 32k
+            f->data      = malloc(SFS_MAX_DIR_SIZE);
 
             show_msg("added dir  '%-20s', from '%s'.", f->pname, f->fname);
         }

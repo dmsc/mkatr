@@ -81,7 +81,7 @@ static unsigned file_msize(struct atr_image *atr, unsigned map)
     {
         const uint8_t *m = atr->data + atr->sec_size * (map - 1);
         // Iterate all sectors of map
-        for( int s = 4; s < atr->sec_size; s+=2 )
+        for( unsigned s = 4; s < atr->sec_size; s+=2 )
             if( read16(m + s) )
                 size += atr->sec_size;
         // next map

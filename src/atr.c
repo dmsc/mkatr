@@ -74,7 +74,7 @@ struct atr_image *load_atr_image(const char *file_name)
     // Allocate new storage
     uint8_t *data = calloc(ssz, num_sectors);
     // Read 3 first sectors
-    for( int i = 0; i < num_sectors; i++ )
+    for( unsigned i = 0; i < num_sectors; i++ )
     {
         if( 1 != fread(data + ssz * i, (i < 3 && pad_size) ? 128 : ssz, 1, f) )
         {

@@ -18,5 +18,6 @@
  * CRC32
  */
 #pragma once
+#include <stdint.h>
 
-unsigned crc32(unsigned crc, const char *buf, unsigned len);
+unsigned crc32(unsigned crc, const uint8_t *buf, unsigned len);

@@ -18,7 +18,7 @@
  * Sparta FS
  */
 #pragma once
-
+#include <stdint.h>
 #include "flist.h"
 
 struct sfs;
@@ -26,7 +26,7 @@ struct sfs;
 struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
                            file_list *flist);
 
-char *sfs_get_data(const struct sfs *);
+uint8_t *sfs_get_data(const struct sfs *);
 int sfs_get_num_sectors(const struct sfs *);
 int sfs_get_sector_size(const struct sfs *);
 int sfs_get_free_sectors(const struct sfs *);

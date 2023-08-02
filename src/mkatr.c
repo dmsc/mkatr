@@ -46,7 +46,7 @@ static void show_usage(void)
     exit(EXIT_SUCCESS);
 }
 
-static void write_atr(const char *out, const char *data, int ssec, int nsec)
+static void write_atr(const char *out, const uint8_t *data, int ssec, int nsec)
 {
     int size = (nsec > 3) ? ssec * (nsec - 3) + 128 * 3 : 128 * nsec;
     show_msg("writing image with %d sectors of %d bytes, total %d bytes.", nsec, ssec,

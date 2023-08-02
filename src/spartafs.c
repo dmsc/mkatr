@@ -24,6 +24,7 @@
 #include "msg.h"
 #include "spartafs.h"
 #include <string.h>
+#include <stdint.h>
 
 static char hex(int x)
 {
@@ -32,7 +33,7 @@ static char hex(int x)
 
 struct sfs
 {
-    char *data;
+    uint8_t *data;
     int nsec;
     int bmap;
     int nbmp;
@@ -41,7 +42,7 @@ struct sfs
     int sec_size;
 };
 
-static char *sfs_ptr(struct sfs *sfs, int sec)
+static uint8_t *sfs_ptr(struct sfs *sfs, int sec)
 {
     return sfs->data + sfs->sec_size * (sec - 1);
 }
@@ -71,7 +72,7 @@ static int sfs_alloc(struct sfs *sfs)
         return -1;
 }
 
-static int get_word(const char *data)
+static int get_word(const uint8_t *data)
 {
     return (data[0] & 0xFF) + ((data[1] & 0xFF) << 8);
 }
@@ -94,7 +95,7 @@ static int sfs_patch_byte(struct sfs *sfs, int smap, int pos, int byte)
     int sect = get_word(sfs_ptr(sfs, smap) + mpos);
     if( sect < 1 || sect > sfs->nsec )
         return -1;
-    char *data = sfs_ptr(sfs, sect);
+    uint8_t *data = sfs_ptr(sfs, sect);
     data[pos]  = byte;
     return 0;
 }
@@ -103,7 +104,7 @@ static int sfs_add_data(struct sfs *sfs, char *data, int size)
 {
     int sec_size = sfs->sec_size;
     int last = 0, first = 0;
-    char *pmap = 0;
+    uint8_t *pmap = 0;
     while( size )
     {
         // Alloc a sector map
@@ -330,7 +331,7 @@ struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
     return sfs;
 }
 
-char *sfs_get_data(const struct sfs *sfs)
+uint8_t *sfs_get_data(const struct sfs *sfs)
 {
     return sfs->data;
 }

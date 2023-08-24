@@ -29,6 +29,8 @@ Options:
 - `-s`  Specify the minimum size of the output image, in bytes. The image
         will be of this size or larger instead of the smaller possible.
         This allows creating images with available free space.
+        Using this option with the `-x` option allows generating images of
+        specific sizes (up to the sector size).
 
 - `-B`  Specify the page (high part of address) of the start of the bootloader.
         Use this option to load games or other software with a low loading

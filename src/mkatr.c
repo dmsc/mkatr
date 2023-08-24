@@ -83,6 +83,35 @@ static void write_atr(const char *out, const uint8_t *data, int ssec, int nsec)
         show_error("can't write output fil '%s': %s", out, strerror(errno));
 }
 
+// Get image size given number of sectors and sector size, taking account for
+// first 3 sectors of 128 bytes.
+static int image_size(int nsec, int ssec)
+{
+    if( ssec == 256 )
+    {
+        if( nsec < 3 )
+            return nsec * 128;
+        else
+            return nsec * ssec - 3 * 128;
+    }
+    else
+        return nsec * ssec;
+}
+
+// Get number of sectors needed to hold the given size.
+static int image_sect(int size, int ssec)
+{
+    if( ssec == 256 )
+    {
+        if( size < 3 * 128 )
+            return (size + 127) / 128;
+        else
+            return (size + 3 * 128 + 255) / 256;
+    }
+    else
+        return (size + ssec - 1) / ssec;
+}
+
 int main(int argc, char **argv)
 {
     char *out = 0;
@@ -92,6 +121,7 @@ int main(int argc, char **argv)
     enum fattr attribs = 0;    // Next file attributes
     int exact_size     = 0;    // Use image of exact size
     int min_size       = 0;    // Minimum image size
+    const int max_size = image_size(65535, 256);  // Maximum image size
 
     prog_name = argv[0];
 
@@ -136,8 +166,8 @@ int main(int argc, char **argv)
                     min_size = strtol(argv[i], &ep, 0);
                     if( min_size <= 0 || !ep || *ep )
                         show_error("argument for option '-s' must be positive.");
-                    if( min_size > 65535 * 256 )
-                        show_error("maximum image size is 16776960 bytes.");
+                    if( min_size > max_size )
+                        show_error("maximum image size is %d bytes.", max_size);
                 }
                 else if( op == 'v' )
                     show_version();
@@ -179,7 +209,7 @@ int main(int argc, char **argv)
     if( exact_size )
     {
         // Try biggest size and the try reducing:
-        if( min_size < 128 * 65535 )
+        if( min_size <= image_size(65535, 128) )
             sfs = build_spartafs(128, 65535, boot_addr, &flist);
         if( !sfs )
             sfs = build_spartafs(256, 65535, boot_addr, &flist);
@@ -188,21 +218,21 @@ int main(int argc, char **argv)
             int nsec = 65535 - sfs_get_free_sectors(sfs);
             int ssec = sfs_get_sector_size(sfs);
 
-            if( nsec * ssec < min_size )
-                nsec = (min_size + ssec - 1) / ssec;
+            if( image_size(nsec, ssec) < min_size )
+                nsec = image_sect(min_size, ssec);
 
-            for( ; nsec > 5 && (nsec * ssec) >= min_size; nsec-- )
+            for( ; nsec > 5 && image_size(nsec, ssec) >= min_size; nsec-- )
             {
                 struct sfs *n = build_spartafs(ssec, nsec, boot_addr, &flist);
                 if( !n )
                     break;
                 sfs_free(sfs);
                 sfs = n;
-                if( sfs_get_free_sectors(sfs) > 0 && (nsec - 1) * ssec > min_size )
+                if( sfs_get_free_sectors(sfs) > 0 && image_size(nsec - 1, ssec) > min_size )
                 {
                     nsec = nsec - sfs_get_free_sectors(sfs) + 1;
-                    if( nsec * ssec < min_size )
-                        nsec = 1 + (min_size + ssec - 1) / ssec;
+                    if( image_size(nsec, ssec) < min_size )
+                        nsec = 1 + image_sect(min_size, ssec);
                 }
             }
         }
@@ -211,7 +241,7 @@ int main(int argc, char **argv)
     {
         for( i = 0; !sfs && sectors[i].size; i++ )
         {
-            if( sectors[i].size * sectors[i].num < min_size )
+            if( image_size(sectors[i].size, sectors[i].num) < min_size )
                 continue;
             sfs = build_spartafs(sectors[i].size, sectors[i].num, boot_addr, &flist);
         }

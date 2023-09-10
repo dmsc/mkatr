@@ -29,3 +29,4 @@ struct atr_image
 
 struct atr_image *load_atr_image(const char *file_name);
 void atr_free(struct atr_image *atr);
+const uint8_t *atr_data(const struct atr_image *atr, unsigned sector);

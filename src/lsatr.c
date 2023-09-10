@@ -77,9 +77,9 @@ static unsigned file_msize(struct atr_image *atr, unsigned map)
         return 0;
     }
     unsigned size    = 0;
-    while( map > 1 && map <= atr->sec_count )
+    const uint8_t *m;
+    while( 0 != (m = atr_data(atr, map)) )
     {
-        const uint8_t *m = atr->data + atr->sec_size * (map - 1);
         // Iterate all sectors of map
         for( unsigned s = 4; s < atr->sec_size; s+=2 )
             if( read16(m + s) )
@@ -94,14 +94,14 @@ static unsigned file_msize(struct atr_image *atr, unsigned map)
 static unsigned read_file(struct atr_image *atr, unsigned map, unsigned size,
                           uint8_t *data)
 {
-    if( map < 2 || map > atr->sec_count )
+    const uint8_t *m = atr_data(atr, map);
+    unsigned s       = 4;
+    unsigned pos     = 0;
+    if( map < 2 || !m )
     {
         show_msg("invalid sector map");
         return 0;
     }
-    const uint8_t *m = atr->data + atr->sec_size * (map - 1);
-    unsigned s       = 4;
-    unsigned pos     = 0;
 
     while( size )
     {
@@ -111,13 +111,13 @@ static unsigned read_file(struct atr_image *atr, unsigned map, unsigned size,
             map = read16(m);
             if( !map )
                 return pos;
-            if( map < 2 || map > atr->sec_count )
+            m = atr_data(atr, map);
+            s = 4;
+            if( map < 2 || !m )
             {
                 show_msg("invalid next sector map");
                 return pos;
             }
-            m = atr->data + atr->sec_size * (map - 1);
-            s = 4;
         }
         unsigned rem = size > atr->sec_size ? atr->sec_size : size;
         unsigned sec = read16(m + s);
@@ -130,7 +130,7 @@ static unsigned read_file(struct atr_image *atr, unsigned map, unsigned size,
             return pos;
         }
         else
-            memcpy(data + pos, atr->data + atr->sec_size * (sec - 1), rem);
+            memcpy(data + pos, atr_data(atr, sec), rem);
         pos += rem;
         size -= rem;
     }
@@ -379,13 +379,14 @@ int main(int argc, char **argv)
     if( atr->sec_count < 6 )
         show_error("%s: ATR image with too few sectors.", atr_name);
     // Read superblock
-    unsigned signature   = atr->data[7];
-    unsigned rootdir_map = read16(atr->data + 9);
-    unsigned num_sect    = read16(atr->data + 11);
-    unsigned bitmap_sect = read16(atr->data + 16);
-    unsigned sector_size = atr->data[31] ? atr->data[31] : 256;
+    const uint8_t *boot  = atr_data(atr, 1);
+    unsigned signature   = boot[7];
+    unsigned rootdir_map = read16(boot + 9);
+    unsigned num_sect    = read16(boot + 11);
+    unsigned bitmap_sect = read16(boot + 16);
+    unsigned sector_size = boot[31] ? boot[31] : 256;
     char vol_name[32], aname[32];
-    if( !get_name(vol_name, aname, atr->data + 22, 8) )
+    if( !get_name(vol_name, aname, boot + 22, 8) )
         vol_name[0] = 0;
 
     if( signature != 0x80 )

@@ -82,6 +82,52 @@ struct atr_image *load_atr_image(const char *file_name)
             break;
         }
     }
+    // Check that sector paddings are 0
+    if( ssz == 256 && num_sectors > 3 )
+    {
+        int chk = 0;
+        for( unsigned i = 0; i < 3; i++ )
+        {
+            chk = 0;
+            for( unsigned j = 0; j < 128; j++ )
+                chk += data[i * 256 + j + 128];
+            if( chk != 0 )
+            {
+                show_msg("%s: ATR suspect - sector %d has data over 128 bytes, fixing.",
+                         file_name, i + 1);
+                break;
+            }
+        }
+        if( chk )
+        {
+            // Try to detect and fixing bad image
+            // Check zeros at end:
+            int chk1 = 0;
+            for( unsigned i = 0; i < 384; i++ )
+                chk1 += data[ssz * num_sectors - 384 + i];
+            // Check zeros after first 3 sectors:
+            int chk2 = 0;
+            for( unsigned i = 0; i < 384; i++ )
+                chk2 += data[384 + i];
+
+            if( !chk1 && chk2 )
+            {
+                memmove(data + 3 * 256, data + 3 * 128, ssz * (num_sectors - 3));
+                memmove(data + 2 * 256, data + 2 * 128, 128);
+                memmove(data + 1 * 256, data + 1 * 128, 128);
+            }
+            else if( !chk2 )
+            {
+                memmove(data + 3 * 256, data + 3 * 128, 128);
+                memmove(data + 2 * 256, data + 2 * 128, 128);
+                memmove(data + 1 * 256, data + 1 * 128, 128);
+            }
+            // Clear remaining space
+            memset(data + 2 * 256 + 128, 0, 128);
+            memset(data + 1 * 256 + 128, 0, 128);
+            memset(data + 0 * 256 + 128, 0, 128);
+        }
+    }
     fclose(f);
     // Ok, copy to image
     struct atr_image *atr = malloc(sizeof(struct atr_image));

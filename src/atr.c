@@ -100,7 +100,7 @@ void atr_free(struct atr_image *atr)
 
 const uint8_t *atr_data(const struct atr_image *atr, unsigned sector)
 {
-    if( sector < 1 || sector >= atr->sec_count )
+    if( sector < 1 || sector > atr->sec_count )
         return 0;
     else
         return atr->data + (sector - 1) * atr->sec_size;

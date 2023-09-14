@@ -66,6 +66,8 @@ struct atr_image *load_atr_image(const char *file_name)
         // If image size is invalid, assume sector padding:
         pad_size    = 3 * (ssz - 128);
         num_sectors = (isz + pad_size) / ssz;
+        if( num_sectors > 65535 )
+            num_sectors = 65535;
         if( num_sectors < 3 )
             show_error("%s: invalid ATR image size (%d), too small.", file_name, isz);
         show_msg("%s: invalid ATR image size (%d), rounding down to (%d)", file_name, isz,

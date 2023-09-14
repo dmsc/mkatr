@@ -18,6 +18,7 @@
  * Loads an ATR with a SpartaDOS file-system and list contents.
  */
 #include "atr.h"
+#include "lsdos.h"
 #include "lssfs.h"
 #include "msg.h"
 #include <errno.h>
@@ -98,8 +99,14 @@ int main(int argc, char **argv)
     if( ext_path && chdir(ext_path) )
         show_error("%s: invalid extract path, %s", ext_path, strerror(errno));
 
-    sfs_read(atr, atr_name, atari_list, lower_case, extract_files);
+    int e = sfs_read(atr, atr_name, atari_list, lower_case, extract_files);
+    if( e )
+    {
+        e = dos_read(atr, atr_name, atari_list, lower_case, extract_files);
+        if( e )
+            show_msg("%s: ATR image format not supported.", atr_name);
+    }
     atr_free(atr);
 
-    return 0;
+    return e;
 }

@@ -318,7 +318,10 @@ int sfs_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
 {
     // Check SFS filesystem
     if( atr->sec_count < 6 )
-        show_error("%s: ATR image with too few sectors.", atr_name);
+    {
+        show_msg("%s: ATR image with too few sectors.", atr_name);
+        return 1;
+    }
     // Read superblock
     const uint8_t *boot  = atr_data(atr, 1);
     unsigned signature   = boot[7];
@@ -331,19 +334,28 @@ int sfs_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         vol_name[0] = 0;
 
     if( signature != 0x80 )
-        show_error("%s: ATR image does not holds a SpartaDOS file system.", atr_name);
+        return 1;
     if( sector_size != atr->sec_size )
-        show_error("%s: invalid SpartaDOS file system, mismatch sector sizes (%d!=%d).",
-                   atr_name, sector_size, atr->sec_size);
+    {
+        show_msg("%s: invalid SpartaDOS file system, mismatch sector sizes (%d!=%d).",
+                 atr_name, sector_size, atr->sec_size);
+        return 1;
+    }
     if( num_sect < atr->sec_count )
         show_msg("%s: ATR image is bigger than file system.", atr_name);
     if( num_sect > atr->sec_count )
         show_msg("%s: WARNING: ATR image is smaller than file system.", atr_name);
     if( rootdir_map < 2 || rootdir_map > atr->sec_count )
-        show_error("%s: invalid SpartaDOS file system, root dir map outside disk.",
-                   atr_name);
+    {
+        show_msg("%s: invalid SpartaDOS file system, root dir map outside disk.",
+                 atr_name);
+        return 1;
+    }
     if( bitmap_sect < 2 || bitmap_sect > atr->sec_count )
-        show_error("%s: invalid SpartaDOS file system, bitmap outside disk.", atr_name);
+    {
+        show_msg("%s: invalid SpartaDOS file system, bitmap outside disk.", atr_name);
+        return 1;
+    }
 
     if( atari_list )
         printf("ATR image: %s\n"

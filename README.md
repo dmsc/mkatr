@@ -74,8 +74,16 @@ option is used):
 lsatr: List and extract contents of ATR images
 ----------------------------------------------
 
-This program list or extracts the contents of an Atari `ATR` disk image with a
-SpartaDOS / BW-DOS disk format.
+This program list or extracts the contents of an Atari `ATR` disk image.
+
+The supported formats are:
+
+- Atari DOS 1, single density.
+- Atari DOS 2.0, single and double density.
+- Atari DOS 2.5, enhanced density.
+- MyDOS, up to 16MB images.
+- SpartaDOS and BW-DOS, up to 16MB images.
+
 
 Usage:
 

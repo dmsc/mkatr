@@ -83,6 +83,7 @@ The supported formats are:
 - Atari DOS 2.5, enhanced density.
 - MyDOS, up to 16MB images.
 - SpartaDOS and BW-DOS, up to 16MB images.
+- LiteDOS 2.x and LiteDOS-SE.
 
 
 Usage:

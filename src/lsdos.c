@@ -39,6 +39,8 @@ struct lsdos
     int atari_list;
     int lower_case;
     int extract_files;
+    int dir_size;
+    int ldos_csize;
 };
 
 //---------------------------------------------------------------------
@@ -129,6 +131,19 @@ static unsigned read_file(struct atr_image *atr, unsigned sect, unsigned size,
     return pos;
 }
 
+static const uint8_t *dir_data(struct lsdos *ls, unsigned dir, unsigned fn)
+{
+    if( ls->ldos_csize )
+    {
+        int cluster = dir / ls->ldos_csize;
+        int pos     = (dir + fn / 8) % ls->ldos_csize;
+        int sector  = cluster * ls->ldos_csize + pos;
+        return atr_data(ls->atr, sector);
+    }
+    else
+        return atr_data(ls->atr, dir + fn / 8);
+}
+
 static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
 {
     unsigned ssize = ls->atr->sec_size;
@@ -136,10 +151,9 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
     if( ls->atari_list )
         printf("Directory of %s\n\n", *name ? name : "/");
 
-    // Always 64 entries, even with 256 bytes per sector
-    for( unsigned fn = 0; fn < 64; fn++ )
+    for( unsigned fn = 0; fn < ls->dir_size; fn++ )
     {
-        const uint8_t *data = atr_data(ls->atr, dir + fn / 8);
+        const uint8_t *data = dir_data(ls, dir, fn);
         if( !data )
             break;
         const uint8_t *entry = data + (fn & 7) * 16;
@@ -240,9 +254,9 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
     if( ls->atari_list )
     {
         printf("\n");
-        for( unsigned fn = 0; fn < 64; fn++ )
+        for( unsigned fn = 0; fn < ls->dir_size; fn++ )
         {
-            const uint8_t *data = atr_data(ls->atr, dir + fn / 8);
+            const uint8_t *data = dir_data(ls, dir, fn);
             if( !data )
                 break;
             const uint8_t *entry = data + (fn & 7) * 16;
@@ -280,6 +294,8 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     unsigned free_sect  = read16(vtoc + 3);
     unsigned bitmap_0   = vtoc[10]; // Bitmap for sectors 0 to 7
     unsigned bitmap_360 = vtoc[55]; // Bitmap for sectors 360 to 367
+    unsigned dir_size   = 64; // Entries per directory
+    unsigned ldos_csize = 0; // LiteDOS cluster size
 
     // Calculate signature for MyDOS image format:
     unsigned mydos_sig = 2;
@@ -287,30 +303,54 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         (atr->sec_size == 256 && atr->sec_count > 1023) )
         mydos_sig = 2 + (atr->sec_count / 8 + 266) / 256;
 
-    if( (signature < 1) ||                           // Invalid DOS
-        (signature == 1 && atr->sec_size != 128) ||  // DOS 1 only supports SD,
-        (signature == 1 && atr->sec_count > 720) ||  // 720 sectors of 128 bytes.
-        (signature > 2 && signature != mydos_sig) || // MyDOS signature for >944 sectors
-        (signature == 2 && atr->sec_count > 1120) || // DOS 2.x only up to 1040 sectors,
-                                                     // but there are images with 1120
-                                                     // sectors.
-        0 != (bitmap_0 & 0x80) )                     // Sector 0 allocated
+    // Check for LiteDOS
+    if( signature & 0x80 )
     {
-        return 1;
+        // Check rest of signature
+        if( memcmp(vtoc + 3, "LiteDOS", 7) )
+            return 1;
+        free_sect  = read16(vtoc + 0x71);
+        ldos_csize = 1 + (signature & 0x7F);
+        dir_size   = 8 * ldos_csize - 8;
     }
-    if( alloc_sect > atr->sec_count - 11 )
+    else if( 0x40 == (signature & 0xC0) )
+    {
+        // Check rest of signature
+        if( memcmp(vtoc + 5, "\0\0\0\0\0", 5) )
+            return 1;
+        if( bitmap_0 & 0x80 )
+            return 1;
+        ldos_csize = 2 +  2 * (signature & 0x3F);
+        dir_size   = 8 * ldos_csize - 8;
+    }
+    else if( signature < 1 )
+        return 1;                           // Invalid DOS
+    else
+    {
+        if( (signature == 1 && atr->sec_size != 128) ||  // DOS 1 only supports SD,
+            (signature == 1 && atr->sec_count > 720) ||  // 720 sectors of 128 bytes.
+            (signature > 2 && signature != mydos_sig) || // MyDOS signature for >944 sectors
+            (signature == 2 && atr->sec_count > 1120) || // DOS 2.x only up to 1040 sectors,
+                                                         // but there are images with 1120
+                                                         // sectors.
+            0 != (bitmap_0 & 0x80) )                     // Sector 0 allocated
+        {
+            return 1;
+        }
+        // DOS 1 bitmap should reserve sector 1, DOS 2 reserves 1, 2 and 3
+        if( 0 != (bitmap_0 & 0xC0) || (signature == 2 && 0 != (bitmap_0 & 0xF0)) ||
+            0 != (bitmap_360 & 0x80) )
+        {
+            show_msg("%s: invalid DOS file system, bitmap not ok.", atr_name);
+            return 1;
+        }
+    }
+
+    if( alloc_sect > atr->sec_count )
         show_msg("%s: DOS sectors (%d) more than ATR image (%d).", atr_name, alloc_sect,
                  atr->sec_count);
     if( free_sect > alloc_sect )
         show_msg("%s: DOS free sectors more than allocated.", atr_name);
-
-    // DOS 1 bitmap should reserve sector 1, DOS 2 reserves 1, 2 and 3
-    if( 0 != (bitmap_0 & 0xC0) || (signature == 2 && 0 != (bitmap_0 & 0xF0)) ||
-        0 != (bitmap_360 & 0x80) )
-    {
-        show_msg("%s: invalid DOS file system, bitmap not ok.", atr_name);
-        return 1;
-    }
 
     const char *dosver = "DOS 1";
     if( signature == 2 && atr->sec_count > 943 )
@@ -319,6 +359,10 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         dosver = "DOS 2.0s";
     else if( signature == 2 )
         dosver = "DOS 2.0D";
+    else if( signature & 0x80 )
+        dosver = "LiteDOS";
+    else if( signature & 0x40 )
+        dosver = "LiteDOS-SE";
     else if( signature > 2 )
         dosver = "MyDOS";
 
@@ -337,6 +381,8 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     ls->atari_list    = atari_list;
     ls->lower_case    = lower_case;
     ls->extract_files = extract_files;
+    ls->dir_size      = dir_size;
+    ls->ldos_csize    = ldos_csize;
     read_dir(ls, 361, "");
 
     free(ls);

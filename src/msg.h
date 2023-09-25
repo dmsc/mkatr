@@ -18,6 +18,7 @@
  * Shows error messages.
  */
 #pragma once
+#include <stddef.h>
 
 extern const char *prog_name;
 
@@ -26,3 +27,7 @@ void show_opt_error(const char *format, ...)
     __attribute__((noreturn, format(printf, 1, 2)));
 void show_msg(const char *format, ...) __attribute__((format(printf, 1, 2)));
 void show_version(void);
+void memory_error(void) __attribute__((noreturn));
+void *check_malloc(size_t size);
+void *check_calloc(size_t nmemb, size_t size);
+void *check_realloc(void *ptr, size_t size);

@@ -192,14 +192,13 @@ static int compare_level(const void *a, const void *b)
 struct sfs *build_spartafs(int sector_size, int num_sectors, unsigned boot_addr,
                            file_list *flist)
 {
-    struct sfs *sfs = malloc(sizeof(struct sfs));
-
-    sfs->data     = calloc(sector_size, num_sectors);
-    sfs->nsec     = num_sectors;
-    sfs->bmap     = 4;
-    sfs->nbmp     = ((num_sectors + 8) / 8 + sector_size - 1) / sector_size;
-    sfs->csec     = 4 + sfs->nbmp;
-    sfs->sec_size = sector_size;
+    struct sfs *sfs = check_malloc(sizeof(struct sfs));
+    sfs->data       = check_calloc(sector_size, num_sectors);
+    sfs->nsec       = num_sectors;
+    sfs->bmap       = 4;
+    sfs->nbmp       = ((num_sectors + 8) / 8 + sector_size - 1) / sector_size;
+    sfs->csec       = 4 + sfs->nbmp;
+    sfs->sec_size   = sector_size;
 
     write_boot(sfs, boot_addr);
 

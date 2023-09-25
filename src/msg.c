@@ -66,3 +66,32 @@ void show_version(void)
            prog_version);
     exit(EXIT_SUCCESS);
 }
+
+void memory_error(void)
+{
+    show_error("memory error!\n");
+}
+
+void *check_malloc(size_t size)
+{
+    void *ret = malloc(size);
+    if( !ret )
+        memory_error();
+    return ret;
+}
+
+void *check_calloc(size_t nmemb, size_t size)
+{
+    void *ret = calloc(nmemb, size);
+    if( !ret )
+        memory_error();
+    return ret;
+}
+
+void *check_realloc(void *ptr, size_t size)
+{
+    void *ret = realloc(ptr, size);
+    if( !ret )
+        memory_error();
+    return ret;
+}

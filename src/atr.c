@@ -74,7 +74,7 @@ struct atr_image *load_atr_image(const char *file_name)
                  num_sectors * ssz - pad_size);
     }
     // Allocate new storage
-    uint8_t *data = calloc(ssz, num_sectors);
+    uint8_t *data = check_calloc(ssz, num_sectors);
     // Read 3 first sectors
     for( unsigned i = 0; i < num_sectors; i++ )
     {
@@ -132,7 +132,7 @@ struct atr_image *load_atr_image(const char *file_name)
     }
     fclose(f);
     // Ok, copy to image
-    struct atr_image *atr = malloc(sizeof(struct atr_image));
+    struct atr_image *atr = check_malloc(sizeof(struct atr_image));
     atr->data             = data;
     atr->sec_size         = ssz;
     atr->sec_count        = num_sectors;

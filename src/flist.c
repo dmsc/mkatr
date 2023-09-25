@@ -34,7 +34,7 @@ static char *read_file(const char *fname, size_t size)
     FILE *f = fopen(fname, "rb");
     if( !f )
         show_error("can't open file '%s': %s", fname, strerror(errno));
-    data = malloc(size);
+    data = check_malloc(size);
     if( size != fread(data, 1, size, f) )
         show_error("error reading file '%s': %s", fname, strerror(errno));
     fclose(f);
@@ -55,6 +55,8 @@ static char *atari_name(const char *fname)
 {
     // Convert to 8+3 filename
     char *out = strdup("           ");
+    if( !out )
+        memory_error();
 
     // Search last part of filename (similar to "basename")
     const char *in, *p;
@@ -102,7 +104,7 @@ static char *atari_name(const char *fname)
 static char *path_name(const char *dir, const char *name)
 {
     size_t n  = strlen(dir);
-    char *ret = malloc(n + 14);
+    char *ret = check_malloc(n + 14);
     strcpy(ret, dir);
     ret[n++] = '>';
     int i;
@@ -122,7 +124,7 @@ static char *path_name(const char *dir, const char *name)
 void flist_add_main_dir(file_list *flist)
 {
     // Creates MAIN directory
-    struct afile *dir = malloc(sizeof(struct afile));
+    struct afile *dir = check_malloc(sizeof(struct afile));
     // Convert time to broken time
     time_t ttim    = time(0);
     struct tm *tim = localtime(&ttim);
@@ -140,7 +142,7 @@ void flist_add_main_dir(file_list *flist)
     dir->size      = 23;
     dir->is_dir    = 1;
     dir->boot_file = 0;
-    dir->data      = malloc(SFS_MAX_DIR_SIZE);
+    dir->data      = check_malloc(SFS_MAX_DIR_SIZE);
     dir->level     = 0;
 
     darray_add(flist, dir);
@@ -156,7 +158,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
 
     if( S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) )
     {
-        struct afile *f = malloc(sizeof(struct afile));
+        struct afile *f = check_malloc(sizeof(struct afile));
 
         // Search in the file list if the path is inside an added directory
         struct afile *dir = 0, **ptr;
@@ -203,7 +205,7 @@ void flist_add_file(file_list *flist, const char *fname, int boot_file,
             f->size      = 23;
             f->is_dir    = 1;
             f->boot_file = 0;
-            f->data      = malloc(SFS_MAX_DIR_SIZE);
+            f->data      = check_malloc(SFS_MAX_DIR_SIZE);
 
             show_msg("added dir  '%-20s', from '%s'.", f->pname, f->fname);
         }

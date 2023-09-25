@@ -174,7 +174,7 @@ static void read_dir(struct lssfs *ls, unsigned map, const char *name)
     if( ls->atari_list )
         printf("Directory of %s\n\n", *name ? name : "/");
 
-    uint8_t *data = malloc(65536); // max directory size (2848 entries)
+    uint8_t *data = check_malloc(65536); // max directory size (2848 entries)
     unsigned len  = read_file(ls->atr, map, 65536, data);
     if( !len )
     {
@@ -248,7 +248,7 @@ static void read_dir(struct lssfs *ls, unsigned map, const char *name)
         }
         else
         {
-            uint8_t *fdata = malloc(fsize);
+            uint8_t *fdata = check_malloc(fsize);
             unsigned r     = read_file(ls->atr, fmap, fsize, fdata);
             if( r != fsize )
                 show_msg("%s: short file in disk", new_name);
@@ -362,7 +362,7 @@ int sfs_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         printf("%s: %u sectors of %u bytes, volume name '%s'.\n", atr_name,
                atr->sec_count, atr->sec_size, vol_name);
 
-    struct lssfs *ls  = malloc(sizeof(struct lssfs));
+    struct lssfs *ls  = check_malloc(sizeof(struct lssfs));
     ls->atr           = atr;
     ls->atari_list    = atari_list;
     ls->lower_case    = lower_case;

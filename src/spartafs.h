@@ -18,8 +18,8 @@
  * Sparta FS
  */
 #pragma once
-#include <stdint.h>
 #include "flist.h"
+#include <stdint.h>
 
 struct sfs;
 

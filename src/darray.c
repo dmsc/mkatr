@@ -16,26 +16,22 @@
  */
 
 #include "darray.h"
+#include "msg.h"
 #include <stdio.h>
-
-static void memory_error(void)
-{
-    fprintf(stderr, "INTERNAL ERROR: memory allocation failure.\n");
-    abort();
-}
 
 void darray_fill_ptr(void *arr, size_t sz, size_t init)
 {
     darray(char) *ret = arr;
-    if( !ret || !(ret->data = malloc(sz * init)) )
+    if( !ret )
         memory_error();
+    ret->data = check_malloc(sz * init);
     ret->len  = 0;
     ret->size = init;
 }
 
 void *darray_alloc(size_t sz, size_t init)
 {
-    darray(char) *ret = malloc(sizeof(darray(char)));
+    darray(char) *ret = check_malloc(sizeof(darray(char)));
     darray_fill_ptr(ret, sz, init);
     return ret;
 }
@@ -46,7 +42,7 @@ void darray_grow(void *arr, size_t sz, size_t newsize)
     while( newsize > p->size )
     {
         p->size *= 2;
-        if( !p->size || !(p->data = realloc(p->data, sz * p->size)) )
+        if( !p->size || !(p->data = check_realloc(p->data, sz * p->size)) )
             memory_error();
     }
 }

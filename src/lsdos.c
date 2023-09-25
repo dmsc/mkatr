@@ -88,7 +88,7 @@ static unsigned read_file(struct atr_image *atr, unsigned sect, unsigned size,
                           uint8_t *data, int dos2, int mdos)
 {
     // To avoid circular references, keep a bitmap with all the sectors already used
-    uint8_t *visited = calloc(65536, 1);
+    uint8_t *visited = check_calloc(65536, 1);
     unsigned lst     = atr->sec_size - 3;
     unsigned pos     = 0;
     while( sect )
@@ -99,8 +99,8 @@ static unsigned read_file(struct atr_image *atr, unsigned sect, unsigned size,
             show_msg("invalid sector link");
             break;
         }
-        int len  = m[lst + 2];
-        int link = (m[lst] << 8) | m[lst + 1];
+        unsigned len  = m[lst + 2];
+        unsigned link = (m[lst] << 8) | m[lst + 1];
 
         // DOS 1.0, only last sector has a size field
         if( !dos2 && !mdos )
@@ -152,7 +152,7 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
     if( ls->atari_list )
         printf("Directory of %s\n\n", *name ? name : "/");
 
-    for( unsigned fn = 0; fn < ls->dir_size; fn++ )
+    for( int fn = 0; fn < ls->dir_size; fn++ )
     {
         const uint8_t *data = dir_data(ls, dir, fn);
         if( !data )
@@ -213,7 +213,7 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
             int mdos       = flags & 0x04;
             int dos2       = flags & 0x02;
             int max_size   = size * ssize;
-            uint8_t *fdata = malloc(max_size);
+            uint8_t *fdata = check_malloc(max_size);
             unsigned fsize = 0;
             // Skip files of size 0
             if( max_size > 0 )
@@ -255,7 +255,7 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
     if( ls->atari_list )
     {
         printf("\n");
-        for( unsigned fn = 0; fn < ls->dir_size; fn++ )
+        for( int fn = 0; fn < ls->dir_size; fn++ )
         {
             const uint8_t *data = dir_data(ls, dir, fn);
             if( !data )
@@ -283,13 +283,13 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
              int extract_files)
 {
     // Check DOS filesystem
-    if( atr->sec_count < 361 )
+    // Read VTOC
+    const uint8_t *vtoc = atr_data(atr, 360);
+    if( !vtoc )
     {
         show_msg("%s: ATR image with too few sectors.", atr_name);
         return 1;
     }
-    // Read VTOC
-    const uint8_t *vtoc = atr_data(atr, 360);
     unsigned signature  = vtoc[0];
     unsigned alloc_sect = read16(vtoc + 1);
     unsigned free_sect  = read16(vtoc + 3);
@@ -377,7 +377,7 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         printf("%s: %u sectors of %u bytes, %s, %d sectors free of %d total.\n", atr_name,
                atr->sec_count, atr->sec_size, dosver, free_sect, alloc_sect);
 
-    struct lsdos *ls  = malloc(sizeof(struct lsdos));
+    struct lsdos *ls  = check_malloc(sizeof(struct lsdos));
     ls->atr           = atr;
     ls->atari_list    = atari_list;
     ls->lower_case    = lower_case;

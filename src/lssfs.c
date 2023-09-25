@@ -20,6 +20,7 @@
 #define _GNU_SOURCE
 #include "lssfs.h"
 #include "atr.h"
+#include "compat.h"
 #include "msg.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -30,11 +31,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
-
-// Windows compatibility:
-#if( defined(_WIN32) || defined(__WIN32__) )
-#define mkdir(A, B) mkdir(A)
-#endif
 
 //---------------------------------------------------------------------
 // Global state
@@ -227,7 +223,7 @@ static void read_dir(struct lssfs *ls, unsigned map, const char *name)
                 if( stat(path, &st) || !S_ISDIR(st.st_mode) )
                 {
                     // Create new directory
-                    if( mkdir(path, 0777) )
+                    if( compat_mkdir(path) )
                         show_error("%s: can´t create directory, %s", path,
                                    strerror(errno));
                 }

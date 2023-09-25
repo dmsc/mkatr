@@ -21,6 +21,7 @@ PROGS=\
 
 SOURCES_mkatr=\
  crc32.c\
+ compat.c\
  darray.c\
  flist.c\
  mkatr.c\
@@ -29,6 +30,7 @@ SOURCES_mkatr=\
 
 SOURCES_lsatr=\
  atr.c\
+ compat.c\
  lsatr.c\
  lssfs.c\
  lsdos.c\

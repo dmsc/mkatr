@@ -20,6 +20,7 @@
 #define _GNU_SOURCE
 #include "lsdos.h"
 #include "atr.h"
+#include "compat.h"
 #include "msg.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -189,7 +190,7 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
                 if( stat(path, &st) || !S_ISDIR(st.st_mode) )
                 {
                     // Create new directory
-                    if( mkdir(path, 0777) )
+                    if( compat_mkdir(path) )
                         show_error("%s: can´t create directory, %s", path,
                                    strerror(errno));
                 }
@@ -294,8 +295,8 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     unsigned free_sect  = read16(vtoc + 3);
     unsigned bitmap_0   = vtoc[10]; // Bitmap for sectors 0 to 7
     unsigned bitmap_360 = vtoc[55]; // Bitmap for sectors 360 to 367
-    unsigned dir_size   = 64; // Entries per directory
-    unsigned ldos_csize = 0; // LiteDOS cluster size
+    unsigned dir_size   = 64;       // Entries per directory
+    unsigned ldos_csize = 0;        // LiteDOS cluster size
 
     // Calculate signature for MyDOS image format:
     unsigned mydos_sig = 2;

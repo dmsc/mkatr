@@ -18,6 +18,7 @@
  * Loads an ATR with a SpartaDOS file-system and list contents.
  */
 #include "atr.h"
+#include "compat.h"
 #include "lsdos.h"
 #include "lssfs.h"
 #include "msg.h"
@@ -25,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 //---------------------------------------------------------------------
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         {
             // Try to create the path
             show_msg("creating output path '%s'.", ext_path);
-            if( mkdir(ext_path, 0777) || chdir(ext_path) )
+            if( compat_mkdir(ext_path) || chdir(ext_path) )
                 show_error("can't create path, '%s': %s", ext_path, strerror(errno));
         }
         else

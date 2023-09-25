@@ -17,14 +17,13 @@
 /*
  * Sparta FS
  */
-
+#include "spartafs.h"
 #include "asm/boot128.h"
 #include "asm/boot256.h"
 #include "crc32.h"
 #include "msg.h"
-#include "spartafs.h"
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 static char hex(int x)
 {
@@ -96,7 +95,7 @@ static int sfs_patch_byte(struct sfs *sfs, int smap, int pos, int byte)
     if( sect < 1 || sect > sfs->nsec )
         return -1;
     uint8_t *data = sfs_ptr(sfs, sect);
-    data[pos]  = byte;
+    data[pos]     = byte;
     return 0;
 }
 

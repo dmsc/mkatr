@@ -116,12 +116,12 @@ int main(int argc, char **argv)
 {
     char *out = 0;
     int i;
-    unsigned boot_addr = 0x07; // Standard boot address: $800
-    int boot_file      = 0;    // Next file is boot file
-    enum fattr attribs = 0;    // Next file attributes
-    int exact_size     = 0;    // Use image of exact size
-    int min_size       = 0;    // Minimum image size
-    const int max_size = image_size(65535, 256);  // Maximum image size
+    unsigned boot_addr = 0x07;                   // Standard boot address: $800
+    int boot_file      = 0;                      // Next file is boot file
+    enum fattr attribs = 0;                      // Next file attributes
+    int exact_size     = 0;                      // Use image of exact size
+    int min_size       = 0;                      // Minimum image size
+    const int max_size = image_size(65535, 256); // Maximum image size
 
     prog_name = argv[0];
 
@@ -228,7 +228,8 @@ int main(int argc, char **argv)
                     break;
                 sfs_free(sfs);
                 sfs = n;
-                if( sfs_get_free_sectors(sfs) > 0 && image_size(nsec - 1, ssec) > min_size )
+                if( sfs_get_free_sectors(sfs) > 0 &&
+                    image_size(nsec - 1, ssec) > min_size )
                 {
                     nsec = nsec - sfs_get_free_sectors(sfs) + 1;
                     if( image_size(nsec, ssec) < min_size )

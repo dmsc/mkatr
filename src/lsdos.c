@@ -321,19 +321,19 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
             return 1;
         if( bitmap_0 & 0x80 )
             return 1;
-        ldos_csize = 2 +  2 * (signature & 0x3F);
+        ldos_csize = 2 + 2 * (signature & 0x3F);
         dir_size   = 8 * ldos_csize - 8;
     }
     else if( signature < 1 )
-        return 1;                           // Invalid DOS
+        return 1; // Invalid DOS
     else
     {
         if( (signature == 1 && atr->sec_size != 128) ||  // DOS 1 only supports SD,
             (signature == 1 && atr->sec_count > 720) ||  // 720 sectors of 128 bytes.
-            (signature > 2 && signature != mydos_sig) || // MyDOS signature for >944 sectors
-            (signature == 2 && atr->sec_count > 1120) || // DOS 2.x only up to 1040 sectors,
-                                                         // but there are images with 1120
-                                                         // sectors.
+            (signature > 2 && signature != mydos_sig) || // MyDOS signature for >944 secs
+            (signature == 2 && atr->sec_count > 1120) || // DOS 2.x only up to 1040
+                                                         // sectors, but there are images
+                                                         // with 1120 sectors.
             0 != (bitmap_0 & 0x80) )                     // Sector 0 allocated
         {
             return 1;

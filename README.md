@@ -94,15 +94,17 @@ Options:
 
 - `-a`  Shows the listing in the same format of native Atari tools,
         this is the file name separated by spaces to the file extension,
-        followed by the size, date and time.
-        Standard listing format shows the size, the date, time and the full
-        path at the end.
+        followed by the size, date and time (if available), and each
+        sub-directory in a separate listing.
+        Standard listing format shows the size, the date, time (if available)
+        and the full path at the end.
 
 - `-l`  Show or extract all filenames in lowercase.
 
 - `-x`  Extract all files in the current directory.
 
-- `-X`  Extract all files in the directory given as argument to the option.
+- `-X`  Extract all files in the directory given as argument to the option. If
+        the directory does not exists, it will be created first.
 
 - `-h`  Shows a brief help.
 

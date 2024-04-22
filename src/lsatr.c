@@ -20,6 +20,7 @@
 #include "atr.h"
 #include "compat.h"
 #include "lsdos.h"
+#include "lsextra.h"
 #include "lssfs.h"
 #include "msg.h"
 #include <errno.h>
@@ -113,11 +114,11 @@ int main(int argc, char **argv)
 
     int e = sfs_read(atr, atr_name, atari_list, lower_case, extract_files);
     if( e )
-    {
         e = dos_read(atr, atr_name, atari_list, lower_case, extract_files);
-        if( e )
-            show_msg("%s: ATR image format not supported.", atr_name);
-    }
+    if( e )
+        e = extra_read(atr, atr_name, atari_list, lower_case, extract_files);
+    if( e )
+        show_msg("%s: ATR image format not supported.", atr_name);
     atr_free(atr);
 
     return e;

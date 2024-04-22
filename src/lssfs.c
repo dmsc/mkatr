@@ -313,11 +313,6 @@ int sfs_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
              int extract_files)
 {
     // Check SFS filesystem
-    if( atr->sec_count < 6 )
-    {
-        show_msg("%s: ATR image with too few sectors.", atr_name);
-        return 1;
-    }
     // Read superblock
     const uint8_t *boot  = atr_data(atr, 1);
     unsigned signature   = boot[7];
@@ -350,6 +345,12 @@ int sfs_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     if( bitmap_sect < 2 || bitmap_sect > atr->sec_count )
     {
         show_msg("%s: invalid SpartaDOS file system, bitmap outside disk.", atr_name);
+        return 1;
+    }
+
+    if( atr->sec_count < 6 )
+    {
+        show_msg("%s: ATR image with too few sectors.", atr_name);
         return 1;
     }
 

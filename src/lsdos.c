@@ -286,10 +286,8 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     // Read VTOC
     const uint8_t *vtoc = atr_data(atr, 360);
     if( !vtoc )
-    {
-        show_msg("%s: ATR image with too few sectors.", atr_name);
         return 1;
-    }
+
     unsigned signature  = vtoc[0];
     unsigned alloc_sect = read16(vtoc + 1);
     unsigned free_sect  = read16(vtoc + 3);

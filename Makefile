@@ -15,6 +15,13 @@
 #  with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 
+# Folder to place compiled programs
+PROG_DIR=.
+
+# Folder to place the build files
+BUILD_DIR=obj
+
+
 PROGS=\
  mkatr\
  lsatr\
@@ -40,10 +47,8 @@ SOURCES_lsatr=\
 CFLAGS=-O2 -Wall
 LDFLAGS=
 
-BUILD_DIR=obj
-
 # Default rule
-all: $(PROGS)
+all: $(PROGS:%=$(PROG_DIR)/%)
 
 # Rule template
 define PROG_template
@@ -53,7 +58,7 @@ define PROG_template
  SOURCES+=$$(SOURCES_$(1))
  OBJS+=$$(OBJS_$(1))
  # Link rule
-$(1): $$(OBJS_$(1))
+$(PROG_DIR)/$(1): $$(OBJS_$(1))
 	$$(CC) $$(CFLAGS) $$(LDFLAGS) $$^ $$(LDLIBS) -o $$@
 endef
 
@@ -70,7 +75,7 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	-rm -f $(PROGS)
+	-rm -f $(PROGS:%=$(PROG_DIR)/%)
 
 # Create output dirs
 $(BUILD_DIR):

@@ -45,9 +45,26 @@ struct atr_image *load_atr_image(const char *file_name)
     }
     if( hdr[0] != 0x96 || hdr[1] != 0x02 )
     {
-        show_error("%s: not an ATR image", file_name);
+        // Check if we can open as a raw SS/SD or SD/ED image
+        uint8_t *data = check_calloc(1, 128 * 1040 + 16);
+        // Move header
+        memcpy(data, hdr, 16);
+        // Read the rest of the file
+        size_t num = 16 + fread(data + 16, 1, 1040 * 128, f);
+        // Accept only exact sizes
+        if( num != 720 * 128 && num != 1040 * 128 )
+        {
+            show_error("%s: not an ATR image", file_name);
+            fclose(f);
+            free(data);
+            return 0;
+        }
         fclose(f);
-        return 0;
+        struct atr_image *atr = check_malloc(sizeof(struct atr_image));
+        atr->data             = data;
+        atr->sec_size         = 128;
+        atr->sec_count        = num / 128;
+        return atr;
     }
     unsigned ssz = hdr[4] | (hdr[5] << 8);
     if( ssz != 128 && ssz != 256 )

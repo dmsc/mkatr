@@ -295,6 +295,7 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     unsigned bitmap_360 = vtoc[55]; // Bitmap for sectors 360 to 367
     unsigned dir_size   = 64;       // Entries per directory
     unsigned ldos_csize = 0;        // LiteDOS cluster size
+    char *bad_sig       = "";       // Message for corrected bad signature
 
     // Calculate signature for MyDOS image format:
     unsigned mydos_sig = 2;
@@ -322,10 +323,40 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         ldos_csize = 2 + 2 * (signature & 0x3F);
         dir_size   = 8 * ldos_csize - 8;
     }
-    else if( signature < 1 )
-        return 1; // Invalid DOS
     else
     {
+        // Check for malformed signatures
+        if( !signature )
+        {
+            if( 0 != (bitmap_0 & 0xC0) || 0 != (bitmap_360 & 0xC0) )
+                return 1;
+            if( memcmp(vtoc + 5, "\0\0\0\0\0", 5) )
+                return 1;
+            if( atr->sec_count > 720 || free_sect > alloc_sect ||
+                (alloc_sect != 707 && alloc_sect != 709) )
+                return 1;
+            // Assume DOS 2
+            signature = alloc_sect == 707 ? 2 : 1;
+            bad_sig   = " (with bad signature)";
+        }
+        // Detect MyDOS images with bad signature, this happens in 720 DD images
+        if( signature == 3 && mydos_sig == 2 &&
+            ((alloc_sect == 707 && atr->sec_size == 128) ||
+             (alloc_sect == 708 && atr->sec_size == 256)) )
+        {
+            // Detect as MyDOS signature to 3
+            mydos_sig = 3;
+            bad_sig   = " (with bad signature)";
+        }
+        // Patch bad VTOC
+        if( !*bad_sig && signature == 2 && (alloc_sect == 707 || alloc_sect == 708) &&
+            alloc_sect >= free_sect && bitmap_0 != 0x0F )
+        {
+            bitmap_0 &= 0x0F;
+            bitmap_360 = 0x7F;
+            bad_sig    = " (with bad VTOC)";
+        }
+
         if( (signature == 1 && atr->sec_size != 128) ||  // DOS 1 only supports SD,
             (signature == 1 && atr->sec_count > 720) ||  // 720 sectors of 128 bytes.
             (signature > 2 && signature != mydos_sig) || // MyDOS signature for >944 secs
@@ -369,11 +400,13 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         printf("ATR image: %s\n"
                "Image size: %u sectors of %u bytes\n"
                "DOS size: %u sectors free of %u total\n"
-               "Volume: %s\n",
-               atr_name, atr->sec_count, atr->sec_size, free_sect, alloc_sect, dosver);
+               "Volume: %s%s\n",
+               atr_name, atr->sec_count, atr->sec_size, free_sect, alloc_sect, dosver,
+               bad_sig);
     else
-        printf("%s: %u sectors of %u bytes, %s, %d sectors free of %d total.\n", atr_name,
-               atr->sec_count, atr->sec_size, dosver, free_sect, alloc_sect);
+        printf("%s: %u sectors of %u bytes, %s%s, %d sectors free of %d total.\n",
+               atr_name, atr->sec_count, atr->sec_size, dosver, bad_sig, free_sect,
+               alloc_sect);
 
     struct lsdos *ls  = check_malloc(sizeof(struct lsdos));
     ls->atr           = atr;

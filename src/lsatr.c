@@ -21,6 +21,7 @@
 #include "compat.h"
 #include "lsdos.h"
 #include "lsextra.h"
+#include "lshowfen.h"
 #include "lssfs.h"
 #include "msg.h"
 #include <errno.h>
@@ -113,6 +114,8 @@ int main(int argc, char **argv)
     }
 
     int e = sfs_read(atr, atr_name, atari_list, lower_case, extract_files);
+    if( e )
+        e = howfen_read(atr, atr_name, atari_list, lower_case, extract_files);
     if( e )
         e = dos_read(atr, atr_name, atari_list, lower_case, extract_files);
     if( e )

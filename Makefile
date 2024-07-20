@@ -42,6 +42,7 @@ SOURCES_lsatr=\
  lssfs.c\
  lsdos.c\
  lsextra.c\
+ lshowfen.c\
  msg.c\
 
 CFLAGS=-O2 -Wall

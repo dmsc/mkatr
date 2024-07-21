@@ -84,6 +84,8 @@ The supported formats are:
 - MyDOS, up to 16MB images.
 - SpartaDOS and BW-DOS, up to 16MB images.
 - LiteDOS 2.x and LiteDOS-SE.
+- BAS2BOOT images, extracts the BAS file inside.
+- Howfen DOS images, extracting the raw BOOT images.
 
 
 Usage:

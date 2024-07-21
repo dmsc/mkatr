@@ -19,6 +19,7 @@
  */
 #define _GNU_SOURCE
 #include "lshowfen.h"
+
 #include "atr.h"
 #include "compat.h"
 #include "msg.h"
@@ -29,22 +30,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-//---------------------------------------------------------------------
-// Global state
-struct lshowfen
-{
-    struct atr_image *atr;
-    int atari_list;
-    int lower_case;
-    int extract_files;
-};
-
-//---------------------------------------------------------------------
-static uint16_t read16(const uint8_t *p)
-{
-    return p[0] | (p[1] << 8);
-}
 
 // Read data and write a UNIX filename and an "Atari" filename.
 static unsigned get_name(char *name, char *aname, const uint8_t *data, int max,
@@ -67,12 +52,12 @@ static unsigned get_name(char *name, char *aname, const uint8_t *data, int max,
         if( c < ' ' || c == '/' || c == '.' || c == '?' || c == '\\' || c == 96 ||
             c > 'z' )
             c = '_';
-        name[len++]      = c;
-        aname[i] = c;
-        if(c != ' ')
+        name[len++] = c;
+        aname[i]    = c;
+        if( c != ' ' )
             last = len;
     }
-    name[last] = 0;
+    name[last]  = 0;
     aname[last] = 0;
     return last;
 }
@@ -81,7 +66,7 @@ static unsigned get_name(char *name, char *aname, const uint8_t *data, int max,
 int get_len(const uint8_t *p)
 {
     int len = 0;
-    for(int i=0; i<4; i++)
+    for( int i = 0; i < 4; i++ )
     {
         if( p[i] > 0x0F && p[i] < 0x1A )
             len = len * 10 + p[i] - 0x10;
@@ -89,8 +74,8 @@ int get_len(const uint8_t *p)
     return len;
 }
 
-int howfen_read(struct atr_image *atr, const char *atr_name, int atari_list, int lower_case,
-             int extract_files)
+int howfen_read(struct atr_image *atr, const char *atr_name, int atari_list,
+                int lower_case, int extract_files)
 {
     const uint8_t *sec1 = atr_data(atr, 1);
     if( !sec1 )
@@ -108,7 +93,7 @@ int howfen_read(struct atr_image *atr, const char *atr_name, int atari_list, int
     memcpy(ver, sec1 + 0x64, 5);
     if( ver[0] == 0x36 )
     {
-        for(int i=0; i<5; i++)
+        for( int i = 0; i < 5; i++ )
             ver[i] = (ver[i] & 0x3F) + 0x20;
         ver[5] = 0;
     }
@@ -123,16 +108,26 @@ int howfen_read(struct atr_image *atr, const char *atr_name, int atari_list, int
                "Volume: HOWFEN DOS %s\n",
                atr_name, atr->sec_count, atr->sec_size, ver);
     else
-        printf("%s: %u sectors of %u bytes, HOWFEN DOS %s.\n",
-               atr_name, atr->sec_count, atr->sec_size, ver);
+        printf("%s: %u sectors of %u bytes, HOWFEN DOS %s.\n", atr_name, atr->sec_count,
+               atr->sec_size, ver);
 
-    if( extract_files )
-        show_error("extracting from HOWFEN DOS not supported");
+    // This is the actual tables in the loader:
+    // $89 + N*$20 : line with letter, name and size
+    // $329     : number of files in the menu
+    // $32A + N : LSB of starting sector of file N
+    // $33E + N : MSB of starting sector of file N
+    //
+    // Files are stored ass boot sectors:
+    //   $00 : if 1, high part of number of sectors, ignored otherwise.
+    //   $01 : number of sectors
+    // $02/$03 : Load address
+    // $04/$05 : Address copied to DOSINI
+    // $06 ... : Run data
 
     // Read directory
     char fname[32];
     char aname[32];
-    for(int i = 0; i < 20; i ++)
+    for( int i = 0; i < 20; i++ )
     {
         const uint8_t *pos = sec1 + 0x8A + i * 0x20;
         if( *pos == (0x21 + i) )
@@ -142,10 +137,48 @@ int howfen_read(struct atr_image *atr, const char *atr_name, int atari_list, int
             // Check filename
             if( get_name(fname, aname, pos + 2, 25, lower_case) )
             {
-                if( atari_list )
-                    printf("%-12s %7u\n", aname, slen * atr->sec_size);
+                // Get sector number
+                uint16_t snum = sec1[0x32A + i] + (sec1[0x33E + i] << 8);
+                // Data is contiguos on disk, just read
+                const uint8_t *fdata = atr_data(atr, snum);
+                if( fdata )
+                {
+                    int ilen = fdata[1] + (fdata[0] == 1 ? 0x100 : 0);
+                    if( ilen != slen )
+                        show_msg("length does not match");
+                    // Check that we have all the data
+                    if( snum + slen - 1 > atr->sec_count )
+                    {
+                        show_msg("truncated file");
+                        slen = atr->sec_count - snum + 1;
+                    }
+                }
                 else
-                    printf("%8u\t\t/%s\n", slen * atr->sec_size, fname);
+                {
+                    show_msg("invalid sector number");
+                    slen = 0;
+                }
+                unsigned fsize = slen * atr->sec_size;
+                if( extract_files )
+                {
+                    struct stat st;
+                    fprintf(stderr, "%s\n", fname);
+                    // Check if file already exists:
+                    if( 0 == stat(fname, &st) )
+                        show_error("%s: file already exists.", fname);
+                    // Create new file
+                    int fd = creat(fname, 0666);
+                    if( fd == -1 )
+                        show_error("%s: can´t create file, %s", fname, strerror(errno));
+                    if( fsize != write(fd, fdata, fsize) )
+                        show_error("%s: can´t write file, %s", fname, strerror(errno));
+                    if( close(fd) )
+                        show_error("%s: can´t write file, %s", fname, strerror(errno));
+                }
+                else if( atari_list )
+                    printf("%-20s %7u\n", aname, fsize);
+                else
+                    printf("%8u\t\t/%s\n", fsize, fname);
             }
         }
         else

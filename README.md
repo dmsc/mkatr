@@ -86,6 +86,7 @@ The supported formats are:
 - LiteDOS 2.x and LiteDOS-SE.
 - BAS2BOOT images, extracts the BAS file inside.
 - Howfen DOS images, extracting the raw BOOT images.
+- K-file boot images, extracts the XEX file inside.
 
 
 Usage:

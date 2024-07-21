@@ -38,6 +38,7 @@ SOURCES_mkatr=\
 SOURCES_lsatr=\
  atr.c\
  compat.c\
+ crc32.c\
  lsatr.c\
  lssfs.c\
  lsdos.c\

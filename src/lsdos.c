@@ -333,10 +333,10 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
             if( memcmp(vtoc + 5, "\0\0\0\0\0", 5) )
                 return 1;
             if( atr->sec_count > 720 || free_sect > alloc_sect ||
-                (alloc_sect != 707 && alloc_sect != 709) )
+                (alloc_sect < 707 || alloc_sect > 709) )
                 return 1;
             // Assume DOS 2
-            signature = alloc_sect == 707 ? 2 : 1;
+            signature = alloc_sect != 709 ? 2 : 1;
             bad_sig   = " (with bad signature)";
         }
         // Detect MyDOS images with bad signature, this happens in 720 DD images

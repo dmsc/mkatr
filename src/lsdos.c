@@ -350,7 +350,7 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
         }
         // Patch bad VTOC
         if( !*bad_sig && signature == 2 && (alloc_sect == 707 || alloc_sect == 708) &&
-            alloc_sect >= free_sect && bitmap_0 != 0x0F )
+            alloc_sect >= free_sect && 0 != (bitmap_0 & 0xF0) )
         {
             bitmap_0 &= 0x0F;
             bitmap_360 = 0x7F;

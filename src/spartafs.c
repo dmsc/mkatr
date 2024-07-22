@@ -104,7 +104,7 @@ static int sfs_add_data(struct sfs *sfs, char *data, int size)
     int sec_size = sfs->sec_size;
     int last = 0, first = 0;
     uint8_t *pmap = 0;
-    while( size )
+    do
     {
         // Alloc a sector map
         int smap = sfs_alloc(sfs);
@@ -137,7 +137,7 @@ static int sfs_add_data(struct sfs *sfs, char *data, int size)
             data += num;
         }
         last = smap;
-    }
+    } while( size );
     return first;
 }
 

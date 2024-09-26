@@ -42,6 +42,7 @@ struct lsdos
     int extract_files;
     int dir_size;
     int ldos_csize;
+    int fix_bibo;
 };
 
 //---------------------------------------------------------------------
@@ -140,6 +141,11 @@ static const uint8_t *dir_data(struct lsdos *ls, unsigned dir, unsigned fn)
         int pos     = (dir + fn / 8) % ls->ldos_csize;
         int sector  = cluster * ls->ldos_csize + pos;
         return atr_data(ls->atr, sector);
+    }
+    else if( ls->fix_bibo )
+    {
+        const uint8_t *data = atr_data(ls->atr, dir + fn / 16);
+        return fn & 8 ? data + 0x80 : data;
     }
     else
         return atr_data(ls->atr, dir + fn / 8);
@@ -279,6 +285,41 @@ static void read_dir(struct lsdos *ls, unsigned dir, const char *name)
     }
 }
 
+// Detect Bibo-DOS directory format, it uses the full sector in DD for the
+// directory data, instead of the first 128 bytes of MyDOS and DOS 2.0D.
+// Note that Bibo-DOS 7.0 fixes this, so it will be detected ad MyDOS.
+int detect_bibo(struct atr_image *atr, int dir_sect)
+{
+    const uint8_t *data = atr_data(atr, dir_sect);
+    if( !data )
+        return 0;
+
+    // Check if this directory has any entries above 128 bytes
+    for( int i = 0; i < 16; i++ )
+    {
+        int flags = data[i * 16];
+        // End of directory?
+        if( !flags )
+            break;
+        // Invalid entry?
+        if( 0 == (flags & 0xC1) )
+            continue;
+        if( flags == 0xFF )
+            continue;
+        int siz = read16(data + i * 16 + 1);
+        int sec = read16(data + i * 16 + 3);
+        if( sec < 1 || sec > atr->sec_count || siz < 1 || siz + 12 > atr->sec_count )
+            continue;
+        // Valid and more than 7, it is Bibo-DOS
+        if( i > 7 )
+            return 1;
+    }
+
+    // Bibo-DOS does not support sub-directories, so we only need to examine
+    // the main directory.
+    return 0;
+}
+
 int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lower_case,
              int extract_files)
 {
@@ -295,6 +336,7 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     unsigned bitmap_360 = vtoc[55]; // Bitmap for sectors 360 to 367
     unsigned dir_size   = 64;       // Entries per directory
     unsigned ldos_csize = 0;        // LiteDOS cluster size
+    unsigned fix_bibo   = 0;        // Fix Bibo-DOS DD directories.
     char *bad_sig       = "";       // Message for corrected bad signature
 
     // Calculate signature for MyDOS image format:
@@ -396,6 +438,12 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     else if( signature > 2 )
         dosver = "MyDOS";
 
+    if( atr->sec_size == 256 && !ldos_csize && detect_bibo(atr, 361) )
+    {
+        dosver   = "Bibo-DOS";
+        fix_bibo = 1;
+    }
+
     if( atari_list )
         printf("ATR image: %s\n"
                "Image size: %u sectors of %u bytes\n"
@@ -415,6 +463,7 @@ int dos_read(struct atr_image *atr, const char *atr_name, int atari_list, int lo
     ls->extract_files = extract_files;
     ls->dir_size      = dir_size;
     ls->ldos_csize    = ldos_csize;
+    ls->fix_bibo      = fix_bibo;
     read_dir(ls, 361, "");
 
     free(ls);

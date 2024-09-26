@@ -17,6 +17,7 @@
 /*
  * Extracts various simple boot formats.
  */
+#define _GNU_SOURCE
 #include "crc32.h"
 #include "lsextra.h"
 #include "msg.h"

@@ -59,7 +59,7 @@ void show_opt_error(const char *format, ...)
 
 void show_version(void)
 {
-    printf("mkatr version %s, Copyright (C) 2016-2023 Daniel Serpell\n\n"
+    printf("mkatr version %s, Copyright (C) 2016-2026 Daniel Serpell\n\n"
            "This is free software under the GNU GENERAL PUBLIC LICENSE.\n"
            "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
            "FOR A PARTICULAR PURPOSE.\n",
